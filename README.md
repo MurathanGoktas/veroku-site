@@ -12,6 +12,17 @@ python3 serve.py
 
 Then open http://localhost:8000. `serve.py` serves `site/` with `Cache-Control: no-store`, so a normal reload always shows the latest edits (including the `locales/*.json` text). Pass a port to use another one: `python3 serve.py 8080`.
 
+## Deploy
+
+GitHub Pages serves the `gh-pages` branch of [MurathanGoktas/veroku-site](https://github.com/MurathanGoktas/veroku-site) at https://veroku.net. That branch is the `site/` folder on its own, split off `main`. After committing to `main`, publish with:
+
+```bash
+git push origin main
+git push origin "$(git subtree split --prefix site)":gh-pages
+```
+
+Pushes go through the MurathanGoktas GitHub account (`gh auth switch -u MurathanGoktas` if gh is on another account). DNS for veroku.net is at GoDaddy: four A records to GitHub Pages (185.199.108-111.153) and `www` as a CNAME to `murathangoktas.github.io`.
+
 ## Layout
 
 ```
