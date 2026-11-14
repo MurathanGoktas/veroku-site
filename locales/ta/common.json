@@ -1,0 +1,20 @@
+{
+  "aria.appearanceLabel": "Appearance: {state}",
+  "aria.changeLanguage": "Change language",
+  "aria.closeMenu": "Close menu",
+  "aria.hero": "Veroku hero",
+  "aria.openMenu": "Open menu",
+  "aria.primaryNav": "Primary navigation",
+  "aria.purpose": "Veroku purpose",
+  "aria.selectLanguage": "Select language",
+  "aria.values": "Veroku values",
+  "meta.titleFormat": "{title} | Veroku",
+  "nav.menu": "மெனு",
+  "nav.purpose": "நோக்கம்",
+  "nav.values": "மதிப்புகள்",
+  "site.footer": "veroku",
+  "site.title": "VEROKU",
+  "theme.auto": "தானியங்கி",
+  "theme.dark": "இருண்ட",
+  "theme.light": "ஒளி"
+}

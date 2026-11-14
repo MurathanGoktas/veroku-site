@@ -1,0 +1,78 @@
+{
+  "site.title": {
+    "message": "VEROKU",
+    "context": "Site name shown in title and footer"
+  },
+  "site.footer": {
+    "message": "veroku",
+    "context": "Footer company name"
+  },
+  "nav.menu": {
+    "message": "MENU",
+    "context": "Trigger label for the site navigation menu"
+  },
+  "nav.purpose": {
+    "message": "Mission",
+    "context": "Navigation link to purpose page"
+  },
+  "nav.values": {
+    "message": "Values",
+    "context": "Navigation link to values page"
+  },
+  "theme.auto": {
+    "message": "AUTO",
+    "context": "Theme toggle: automatic/system preference"
+  },
+  "theme.dark": {
+    "message": "DARK",
+    "context": "Theme toggle: dark mode"
+  },
+  "theme.light": {
+    "message": "LIGHT",
+    "context": "Theme toggle: light mode"
+  },
+  "home.tagline": {
+    "message": "Veroku works to create beauty and abundance in balance.",
+    "context": "Home page hero sentence"
+  },
+  "meta.titleFormat": {
+    "message": "{title} | Veroku",
+    "context": "Format string for the browser tab title; {title} is replaced by the page title"
+  },
+  "aria.primaryNav": {
+    "message": "Primary navigation",
+    "context": "Aria-label for the site navigation region"
+  },
+  "aria.openMenu": {
+    "message": "Open menu",
+    "context": "Aria-label for the menu toggle button when the menu is closed"
+  },
+  "aria.closeMenu": {
+    "message": "Close menu",
+    "context": "Aria-label for the menu toggle button when the menu is open"
+  },
+  "aria.changeLanguage": {
+    "message": "Change language",
+    "context": "Aria-label for the language picker toggle button"
+  },
+  "aria.selectLanguage": {
+    "message": "Select language",
+    "context": "Aria-label for the language picker dropdown menu"
+  },
+  "aria.appearanceLabel": {
+    "message": "Appearance: {state}",
+    "context": "Aria-label for the theme toggle button; {state} is the current theme name (auto/dark/light)"
+  },
+  "aria.hero": {
+    "message": "Veroku hero",
+    "context": "Aria-label for the home page hero section"
+  },
+  "aria.purpose": {
+    "message": "Veroku purpose",
+    "context": "Aria-label for the purpose page"
+  },
+  "aria.values": {
+    "message": "Veroku values",
+    "context": "Aria-label for the values page"
+  }
+}

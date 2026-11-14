@@ -1,0 +1,20 @@
+{
+  "aria.appearanceLabel": "Appearance: {state}",
+  "aria.changeLanguage": "Change language",
+  "aria.closeMenu": "Close menu",
+  "aria.hero": "Veroku hero",
+  "aria.openMenu": "Open menu",
+  "aria.primaryNav": "Primary navigation",
+  "aria.purpose": "Veroku purpose",
+  "aria.selectLanguage": "Select language",
+  "aria.values": "Veroku values",
+  "meta.titleFormat": "{title} | Veroku",
+  "nav.menu": "मेनू",
+  "nav.purpose": "उद्देश्य",
+  "nav.values": "मूल्य",
+  "site.footer": "veroku",
+  "site.title": "VEROKU",
+  "theme.auto": "स्वचालित",
+  "theme.dark": "डार्क",
+  "theme.light": "लाइट"
+}

@@ -1,0 +1,20 @@
+{
+  "aria.appearanceLabel": "Appearance: {state}",
+  "aria.changeLanguage": "Change language",
+  "aria.closeMenu": "Close menu",
+  "aria.hero": "Veroku hero",
+  "aria.openMenu": "Open menu",
+  "aria.primaryNav": "Primary navigation",
+  "aria.purpose": "Veroku purpose",
+  "aria.selectLanguage": "Select language",
+  "aria.values": "Veroku values",
+  "meta.titleFormat": "{title} | Veroku",
+  "nav.menu": "Menu",
+  "nav.purpose": "Mission",
+  "nav.values": "Valeurs",
+  "site.footer": "veroku",
+  "site.title": "VEROKU",
+  "theme.auto": "AUTO",
+  "theme.dark": "SOMBRE",
+  "theme.light": "CLAIR"
+}

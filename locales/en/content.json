@@ -1,0 +1,82 @@
+{
+  "page.purpose.title": {
+    "message": "Mission",
+    "context": "Page title for the purpose page shown in the browser tab and as the visually-hidden heading"
+  },
+  "page.values.title": {
+    "message": "Values",
+    "context": "Page title for the values page shown in the browser tab and as the visually-hidden heading"
+  },
+  "mission.heading": {
+    "message": "Our Mission",
+    "context": "Heading of the mission page"
+  },
+  "mission.statement": {
+    "message": "To keep people in harmony, in balance and in agency.",
+    "context": "The mission statement, first line under the heading"
+  },
+  "mission.agency": {
+    "message": "We discover and nurture human agency.",
+    "context": "Mission paragraph about human agency"
+  },
+  "mission.support": {
+    "message": "We help people and organizations go through their cognitive automation transformation in a healthy way.",
+    "context": "Mission paragraph about supporting the cognitive automation transformation"
+  },
+  "values.heading.main": {
+    "message": "Our Values",
+    "context": "Values page main heading"
+  },
+  "values.heading.ops": {
+    "message": "Our Operating Principles",
+    "context": "Values page second major heading"
+  },
+  "values.list.connected": {
+    "message": "Everything is connected to everything.",
+    "context": "Values page list item"
+  },
+  "values.list.people": {
+    "message": "We pull people away from drudgery and bring them closer to one another.",
+    "context": "Values page list item"
+  },
+  "values.list.tool": {
+    "message": "Technology is a tool, and a tool is technology.",
+    "context": "Values page list item"
+  },
+  "values.list.abundance": {
+    "message": "Cognitive automation creates abundance.",
+    "context": "Values page list item"
+  },
+  "values.list.change": {
+    "message": "Change is inevitable, and it is not new.",
+    "context": "Values page list item"
+  },
+  "values.principles.beauty": {
+    "message": "We create beauty.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.ease": {
+    "message": "We create ease.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.playful": {
+    "message": "Execution is done playfully.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.people": {
+    "message": "It is people who direct and evaluate.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.mistakes": {
+    "message": "We are not afraid of mistakes; we fix them quickly.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.list.smallMoves": {
+    "message": "Small moves lead to big results.",
+    "context": "Values page list item"
+  },
+  "values.list.worth": {
+    "message": "We separate a person's worth from their economic value.",
+    "context": "Values page list item"
+  }
+}
