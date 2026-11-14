@@ -1,0 +1,2146 @@
+/* ==========================================================================
+   Z-INDEX LAYERS
+   0   - Canvas background
+   10  - Center logo (behind page content)
+   100 - Page content
+   200 - Chrome (nav, footer, controls)
+   210 - Dropdowns (lang menu)
+   ========================================================================== */
+
+* { margin: 0; padding: 0; }
+
+:root {
+  --mono-font: 'Departure Mono', 'SFMono-Regular', ui-monospace, monospace;
+  --serif-font: Georgia, 'Times New Roman', serif;
+
+  /* Primitive type scale. Components consume these shared steps instead of
+     introducing page-specific pixel sizes. */
+  --font-size-xs: 0.8125rem;
+  --font-size-sm: 0.9375rem;
+  --font-size-md: 1.0625rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.375rem;
+  --font-size-2xl: 1.625rem;
+  --font-size-3xl: 2.25rem;
+
+  /* Semantic roles. Reading and display text scale continuously; interface
+     and form text stay stable across viewport breakpoints. */
+  --text-ui: var(--font-size-sm);
+  --text-meta: var(--font-size-sm);
+  --text-form: var(--font-size-sm);
+  --text-body: var(--font-size-sm);
+  --text-reading: clamp(1.125rem, 1.05rem + 0.375vw, 1.25rem);
+  --text-title: var(--font-size-lg);
+  --text-hero: clamp(1.25rem, 0.875rem + 1.5vw, 2.5rem);
+  --leading-ui: 1.25;
+  --leading-body: 1.6;
+  --leading-tight: 1.15;
+
+  /* The shader's home camera puts the horizon 39.4309% of the canvas height
+     above its bottom edge. JavaScript replaces this fallback with the exact
+     rendered pixel position and keeps it in sync while the camera moves. */
+  --scene-horizon-from-bottom: 39.4309vh;
+  --hero-horizon-gap: 2.5rem;
+
+  --theme-transition-duration: 900ms;
+  /* Exactly matches the shader's smoothstep easing. */
+  --theme-transition-easing: cubic-bezier(0.333333, 0, 0.666667, 1);
+
+  /* One responsive frame controls every outer alignment. Components should
+     consume these tokens rather than introducing their own viewport offsets. */
+  --frame-inline: 75px;
+  --frame-block: 75px;
+  --frame-content-top: calc(var(--frame-block) + 76px);
+  --frame-content-bottom: calc(var(--frame-block) + 100px);
+  --frame-chrome-fade: 40px;
+  --chrome-surface: 250, 249, 246;
+  --color-text-day: #353431;
+}
+
+@property --page-veil-r {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 250;
+}
+
+@property --page-veil-g {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 249;
+}
+
+@property --page-veil-b {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 246;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --scene-horizon-from-bottom: 39.4309dvh;
+  }
+}
+
+html, body {
+  cursor: auto;
+  background: #b8b8b8;
+}
+
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-x: clip;
+  font-family: var(--mono-font);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.theme-night, .theme-night body {
+  background: #1a1a1a;
+}
+
+.svg-definitions {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+a {
+  cursor: pointer;
+}
+
+a:hover {
+  cursor: pointer;
+}
+
+.theme-night a {
+  cursor: pointer;
+}
+
+.theme-night a:hover {
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   LAYER 0: Canvas Background
+   ========================================================================== */
+
+/* Scoped to the shader canvas: other canvases (like the terminal recording
+   player's) must not become hidden, fixed, full-viewport layers. */
+#canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  image-rendering: auto;
+  opacity: 0;
+  transition: opacity 1000ms ease;
+}
+
+@supports (height: 100dvh) {
+  #canvas {
+    height: 100dvh;
+  }
+}
+
+#canvas.shader-ready {
+  opacity: 1; 
+}
+
+/* ==========================================================================
+   SHARED SITE FRAME
+   The page and both chrome rows share one parent and one set of gutters.
+   ========================================================================== */
+
+.site-frame {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-header,
+.site-footer-bar {
+  direction: ltr;
+  z-index: 200;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  align-items: flex-start;
+  padding: var(--frame-block) var(--frame-inline) 0;
+}
+
+.site-footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 var(--frame-inline) var(--frame-block);
+}
+
+.site-header > *,
+.site-footer-bar > * {
+  pointer-events: auto;
+}
+
+.site-header > .top-nav,
+.site-footer-bar > .bottom-controls {
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   LAYER 10: Center Logo
+   ========================================================================== */
+
+.center-logo {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: block;
+  text-decoration: none;
+}
+
+.main-logo {
+  display: block;
+  /* The centered lockup used to be wider than the emblem. Preserve roughly
+     the same visual height now that every page uses the emblem-only asset. */
+  width: 125px;
+  max-width: 27vw;
+  opacity: 0;
+  transition: opacity 0.35s ease, filter 0.48s ease;
+}
+
+.loaded .main-logo,
+.skip-intro .main-logo {
+  opacity: 0.85;
+}
+
+body:has(.page[data-page-type="home"]) .center-logo,
+body:has(.page[data-page-type="corner-logo"]) .center-logo {
+  position: static;
+  transform: none;
+  flex: 0 0 auto;
+  /* Optical exception: center the tall emblem on the first navigation row. */
+  margin-block-start: -35px;
+}
+
+body:has(.page[data-page-type="home"]) .main-logo,
+body:has(.page[data-page-type="corner-logo"]) .main-logo {
+  /* The emblem SVG has a tight viewBox, so its visible edge is the frame edge. */
+  width: 32px;
+  max-width: none;
+}
+
+/* ==========================================================================
+   LAYER 100: Page Content
+   ========================================================================== */
+
+.page {
+  position: relative;
+  z-index: 100;
+  flex: 1 0 auto;
+  opacity: 1;
+  transition: opacity 0.52s ease;
+}
+
+.page[data-page-type="home"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.page.is-leaving {
+  opacity: 0;
+  transition-duration: 0.22s;
+  transition-timing-function: ease-out;
+}
+
+.page.htmx-settling {
+  opacity: 0;
+  transition: none;
+}
+
+.page.is-entering {
+  transition: none;
+  animation: pageEnter 0.52s ease both;
+}
+
+/* Between content pages, keep the page veil fully present and transition only
+   the readable content. This prevents the background from flashing away. */
+body.content-page-swap .page,
+body.content-page-swap .page.is-leaving,
+body.content-page-swap .page.htmx-settling {
+  opacity: 1;
+  transition: none;
+  animation: none;
+}
+
+body.content-page-swap .page.is-leaving .content-surface {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+body.content-page-swap .page.htmx-settling .content-surface {
+  opacity: 0;
+  transition: none;
+}
+
+.page.is-content-entering .content-surface {
+  animation: contentPageEnter 0.3s ease both;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes contentPageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Full document pages. The fixed veil belongs to the page rather than a
+   floating card, so content uses the browser's normal scroll flow. */
+.content-page {
+  --page-veil-r: 250;
+  --page-veil-g: 249;
+  --page-veil-b: 246;
+  --page-veil: var(--page-veil-r), var(--page-veil-g), var(--page-veil-b);
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  padding: var(--frame-content-top) var(--frame-inline) var(--frame-content-bottom);
+  color: var(--color-text-day);
+  text-shadow: none;
+}
+
+.content-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 72% 115% at 50% 48%,
+    rgba(var(--page-veil), 0.985) 0%,
+    rgba(var(--page-veil), 0.985) 45%,
+    rgba(var(--page-veil), 0.96) 54%,
+    rgba(var(--page-veil), 0.68) 67%,
+    rgba(var(--page-veil), 0.28) 80%,
+    rgba(var(--page-veil), 0) 96%
+  );
+}
+
+.theme-night .content-page {
+  --page-veil-r: 46;
+  --page-veil-g: 45;
+  --page-veil-b: 43;
+  color: #fff;
+}
+
+/* Theme changes use the same 900ms smoothstep as the WebGL background. The
+   registered RGB channels let the radial veil interpolate without changing
+   its opacity or shape midway through the transition. */
+body.theme-transition-ready .content-page {
+  transition:
+    color var(--theme-transition-duration) var(--theme-transition-easing),
+    --page-veil-r var(--theme-transition-duration) var(--theme-transition-easing),
+    --page-veil-g var(--theme-transition-duration) var(--theme-transition-easing),
+    --page-veil-b var(--theme-transition-duration) var(--theme-transition-easing);
+}
+
+.content-surface {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  font-family: var(--mono-font);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.page--prose .content-surface {
+  width: min(100%, 760px);
+}
+
+.page--post-detail .content-surface {
+  width: min(100%, 760px);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page,
+  .page.is-leaving,
+  body.content-page-swap .page.is-leaving .content-surface,
+  body.theme-transition-ready .content-page {
+    transition-duration: 0.01ms;
+  }
+
+  .page.is-entering,
+  .page.is-content-entering .content-surface {
+    animation-duration: 0.01ms;
+  }
+}
+
+body:has(.content-page) .center-logo {
+  z-index: 200;
+}
+
+body:not(.theme-night):has(.content-page) :is(.nav-link, .menu-label, #site-footer, #theme-toggle, #lang-toggle) {
+  color: var(--color-text-day);
+  text-shadow: none;
+}
+
+body.theme-night:has(.content-page) :is(.nav-link, .menu-label, #site-footer, #theme-toggle, #lang-toggle) {
+  color: #fff;
+  text-shadow: none;
+}
+
+html :is(.nav-link, .menu-label, #site-footer, #theme-toggle, #lang-toggle) {
+  transition-duration: 0.52s;
+  transition-timing-function: ease;
+}
+
+body:not(.theme-night):has(.content-page) {
+  cursor: auto;
+}
+
+body:not(.theme-night):has(.content-page) :is(a, button, summary) {
+  cursor: pointer;
+}
+
+body.theme-night:has(.content-page) {
+  cursor: auto;
+}
+
+body.theme-night:has(.content-page) :is(a, button, summary) {
+  cursor: pointer;
+}
+
+body:not(.theme-night) .main-logo {
+  filter: url('#logo-day-color');
+}
+
+body:not(.theme-night) :is(.nav-link, .menu-label, #site-footer, #theme-toggle, #lang-toggle) {
+  color: var(--color-text-day);
+  text-shadow: none;
+}
+
+body:not(.theme-night) .menu-trigger-toggle,
+body:not(.theme-night) :is(.nav-link, .menu-trigger-toggle, #theme-toggle, #lang-toggle):hover {
+  color: var(--color-text-day);
+}
+
+body:not(.theme-night):has(.content-page) .top-nav.has-overlap-backdrop .nav-link {
+  color: var(--color-text-day);
+  text-shadow: none;
+}
+
+.home-hero {
+  position: relative;
+  flex: 1 0 auto;
+  box-sizing: border-box;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.home-hero-text {
+  position: absolute;
+  inset-inline: var(--frame-inline);
+  /* Anchor the text's lower edge above the WebGL horizon. As translations or
+     type sizes change, the text grows upward without changing this distance. */
+  bottom: calc(var(--scene-horizon-from-bottom) + var(--hero-horizon-gap));
+  margin: 0;
+  font-family: var(--serif-font);
+  font-size: var(--text-hero);
+  line-height: var(--leading-tight);
+  font-style: italic;
+  font-weight: 400;
+  text-wrap: balance;
+}
+
+.home-hero-open-clause {
+  white-space: nowrap;
+}
+
+.home-hero-tail-clause {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+.home-hero-link,
+.home-hero-open {
+  position: relative;
+  display: inline-block;
+  --hero-star-size: 15px;
+  --hero-star-gap: 3px;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.03em;
+  text-underline-offset: 0.08em;
+}
+
+.home-hero-link,
+.home-hero-open {
+  color: inherit;
+  text-shadow: none;
+  cursor: pointer;
+}
+
+.home-hero-link:hover,
+.home-hero-open:hover {
+  color: inherit;
+  text-decoration: none;
+  text-shadow: none;
+  cursor: pointer;
+}
+
+body:not(.theme-night) .home-hero {
+  color: var(--color-text-day);
+  text-shadow: none;
+}
+
+.theme-night .home-hero-link,
+.theme-night .home-hero-open {
+  cursor: pointer;
+}
+
+.theme-night .home-hero-link:hover,
+.theme-night .home-hero-open:hover {
+  cursor: pointer;
+}
+
+.home-hero-link::before,
+.home-hero-open::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: var(--hero-star-size);
+  height: var(--hero-star-size);
+  transform: translateX(-50%);
+  transform-origin: center;
+  background: url('/static/cursor-light.svg') center/contain no-repeat;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+body:not(.theme-night) .home-hero-link::before,
+body:not(.theme-night) .home-hero-open::after {
+  background-image: url('/static/cursor-dark.svg');
+}
+
+.home-hero-link::before {
+  top: calc(-1 * (var(--hero-star-size) + var(--hero-star-gap)));
+}
+
+.home-hero-open::after {
+  bottom: calc(-1 * (var(--hero-star-size) + var(--hero-star-gap)) + 4px);
+}
+
+.home-hero-link:hover::before,
+.home-hero-open:hover::after {
+  opacity: 1;
+  animation: heroWordStarSpin 0.85s linear infinite;
+}
+
+@keyframes heroWordStarSpin {
+  from {
+    transform: translateX(-50%) rotate(0deg);
+  }
+  to {
+    transform: translateX(-50%) rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-link:hover::before,
+  .home-hero-open:hover::after {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
+   LAYER 200: Chrome (Nav, Footer, Controls)
+   ========================================================================== */
+
+/* Top Navigation */
+.top-nav {
+  position: relative;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  opacity: 1;
+}
+
+.top-nav.has-overlap-backdrop {
+  z-index: 260;
+}
+
+.top-nav.has-overlap-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: -10px -20px -12px;
+  border: 1px solid rgba(95, 95, 95, 0.75);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(175, 175, 175, 0.2) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 72% 24%, rgba(165, 165, 165, 0.18) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 40% 66%, rgba(185, 185, 185, 0.16) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 86% 78%, rgba(170, 170, 170, 0.2) 0 1px, transparent 1.8px),
+    linear-gradient(rgba(58, 58, 58, 0.98), rgba(58, 58, 58, 0.98)),
+    url('/static/paper-dark.png') center/220px 220px;
+  background-size: 220px 220px, 220px 220px, 220px 220px, 220px 220px, auto, 220px 220px;
+  background-repeat: repeat;
+}
+
+.menu-trigger {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+}
+
+.menu-trigger-toggle {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+}
+
+.menu-label {
+  display: inline-block;
+  font-family: var(--mono-font);
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.menu-trigger-toggle:hover {
+  color: #fff;
+}
+
+body:not(.theme-night) .menu-trigger-toggle:hover,
+body:not(.theme-night) .top-nav.is-open .menu-trigger-toggle {
+  color: var(--color-text-day);
+  text-shadow: none;
+}
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.menu-links[hidden] {
+  display: none;
+}
+
+.menu-link-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.menu-link-group--external {
+  margin-top: 12px;
+}
+
+.nav-link {
+  font-family: var(--mono-font);
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  text-shadow: none;
+  transition: color 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: url('/static/cursor-light.svg') center/contain no-repeat;
+  transform-origin: center;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #fff;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.14em;
+  text-shadow: none;
+  cursor: pointer;
+}
+
+body:not(.theme-night) .nav-link::after {
+  background-image: url('/static/cursor-dark.svg');
+}
+
+.nav-link:hover::after {
+  opacity: 1;
+  animation: navLinkStarSpin 1.15s linear infinite;
+}
+
+@keyframes navLinkStarSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-link:hover::after,
+  .page--prose .letter-body a.join-role__apply:hover::after,
+  .content-page .letter-body a.posts-action-link:hover::after,
+  .page--values .disclosure-summary:is(:hover, :focus-visible)::after,
+  .posts-list a:is(:hover, :focus-visible) .post-name::after {
+    animation: none;
+  }
+}
+
+.theme-night .nav-link,
+.theme-night .menu-trigger-toggle {
+  cursor: pointer;
+}
+
+.theme-night .nav-link:hover,
+.theme-night .menu-trigger-toggle:hover {
+  cursor: pointer;
+}
+
+/* Footer */
+#site-footer {
+  position: relative;
+  z-index: 200;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: var(--mono-font);
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+}
+
+/* Bottom Controls */
+.bottom-controls {
+  position: relative;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#theme-toggle {
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: var(--mono-font);
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#theme-toggle:hover {
+  color: #fff;
+  cursor: pointer;
+}
+
+.theme-night #theme-toggle {
+  cursor: pointer;
+}
+
+.theme-night #theme-toggle:hover {
+  cursor: pointer;
+}
+
+#theme-toggle .value {
+  margin-inline-start: 0.15em;
+}
+
+/* Language Picker */
+.lang-picker {
+  position: relative;
+  z-index: 220;
+  pointer-events: auto;
+}
+
+#lang-toggle {
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: var(--mono-font);
+  font-size: var(--text-ui);
+  line-height: var(--leading-ui);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  position: relative;
+  z-index: 221;
+  pointer-events: auto;
+}
+
+#lang-toggle:hover {
+  color: #fff;
+  cursor: pointer;
+}
+
+.theme-night #lang-toggle {
+  cursor: pointer;
+}
+
+.theme-night #lang-toggle:hover {
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   LAYER 210: Dropdowns
+   ========================================================================== */
+
+.lang-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  z-index: 230;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  list-style: none;
+  padding: 6px 0;
+  min-width: 160px;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.lang-menu:not([hidden]) {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.lang-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lang-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lang-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.lang-menu li {
+  padding: 0;
+  margin: 0;
+}
+
+.lang-menu button {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--mono-font);
+  font-size: var(--text-ui);
+  line-height: 1.4;
+  padding: 8px 16px;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1.2em auto;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.lang-menu button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 1);
+}
+
+.lang-menu button[aria-selected="true"] {
+  color: rgba(255, 255, 255, 1);
+}
+
+.lang-menu .lang-check {
+  width: 1.2em;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  opacity: 0;
+}
+
+.lang-menu button[aria-selected="true"] .lang-check {
+  opacity: 0.7;
+}
+
+.lang-menu .lang-code {
+  opacity: 0.5;
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Letter Content Styles
+   ========================================================================== */
+
+.email-meta {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 1ch;
+  align-items: baseline;
+  margin-bottom: 24px;
+  font-size: var(--text-meta);
+  line-height: 1.5;
+}
+
+.email-meta p {
+  display: contents;
+}
+
+.email-meta-key,
+.email-meta-value {
+  min-width: 0;
+  line-height: 1.5;
+}
+
+.email-meta-key {
+  opacity: 0.6;
+}
+
+.email-meta-value {
+  overflow-wrap: anywhere;
+}
+
+.email-meta a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.theme-night .email-meta a {
+  cursor: pointer;
+}
+
+.email-meta a:hover,
+.theme-night .email-meta a:hover {
+  color: #fff;
+}
+
+.email-meta + .letter-body {
+  font-family: var(--serif-font);
+  font-size: var(--text-reading);
+  line-height: var(--leading-body);
+  font-weight: 400;
+}
+
+.email-meta + .letter-body em,
+.email-meta + .letter-body i {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.email-meta + .letter-body strong,
+.email-meta + .letter-body b,
+.email-meta + .letter-body a {
+  font-weight: 700;
+}
+
+/* These letter defaults live in :where() so they carry zero specificity and
+   .prose (imported above) can override them on markdown-rendered bodies. */
+:where(.letter-body) p {
+  margin-bottom: 20px;
+}
+
+:where(.letter-body) ul,
+:where(.letter-body) ol {
+  list-style: none;
+  padding-inline-start: 0;
+  margin: 20px 0;
+}
+
+:where(.letter-body) li {
+  position: relative;
+  padding-inline-start: 1.4em;
+  margin: 6px 0;
+}
+
+:where(.letter-body) li::before {
+  content: "•";
+  position: absolute;
+  inset-inline-start: 0;
+}
+
+.posts-list li {
+  padding-inline-start: 0;
+}
+
+.posts-list li::before {
+  content: none;
+}
+
+.posts-title {
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.posts-action-link {
+  text-transform: uppercase;
+}
+
+.post-date {
+  font-size: var(--text-meta);
+  font-weight: 400;
+  color: rgba(25, 24, 22, 0.6);
+}
+
+.theme-night .post-date {
+  color: rgba(240, 240, 240, 0.6);
+}
+
+.posts-list .post-name {
+  margin-inline-start: 0.6em;
+  font-family: var(--serif-font);
+  font-size: var(--text-title);
+  line-height: var(--leading-tight);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Hover treatment matching the values disclosures: dotted underline on the
+   title plus the spinning star. The star lives on the name's ::after so it
+   follows the title text, including when it wraps below the date on mobile.
+   Being an inline-block, it is not painted by the propagated underline. */
+.posts-list a:is(:hover, :focus-visible) .post-name {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.14em;
+}
+
+.posts-list .post-name::after {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-inline-start: 8px;
+  background: url('/static/cursor-light.svg') center/contain no-repeat;
+  transform-origin: center;
+  vertical-align: -2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+body:not(.theme-night) .posts-list .post-name::after {
+  background-image: url('/static/cursor-dark.svg');
+}
+
+.posts-list a:is(:hover, :focus-visible) .post-name::after {
+  opacity: 1;
+  animation: navLinkStarSpin 1.15s linear infinite;
+}
+
+.letter-body a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.theme-night .letter-body a {
+  cursor: pointer;
+}
+
+.letter-body a:hover,
+.theme-night .letter-body a:hover {
+  color: #fff;
+}
+
+.letter-footer {
+  margin-top: 28px;
+  font-size: var(--text-meta);
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(25, 24, 22, 0.6);
+}
+
+.theme-night .letter-footer {
+  color: rgba(240, 240, 240, 0.6);
+}
+
+.letter-footer a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.theme-night .letter-footer a {
+  cursor: pointer;
+}
+
+.letter-footer a:hover,
+.theme-night .letter-footer a:hover {
+  color: #fff;
+}
+
+/* ==========================================================================
+   Subscribe Form
+   ========================================================================== */
+
+.updates-form-area {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 4em;
+  margin: 24px 0;
+}
+
+[dir="rtl"] .updates-form-area {
+  align-items: flex-end;
+}
+
+.updates-input-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: text;
+}
+
+[dir="rtl"] .updates-input-wrapper {
+  justify-content: flex-end;
+}
+
+.updates-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: var(--text-form);
+  line-height: var(--leading-body);
+  color: inherit;
+  caret-color: rgba(25, 24, 22, 0.8);
+  cursor: inherit;
+  -webkit-user-select: text;
+  user-select: text;
+  text-align: start;
+}
+
+.updates-input.placeholder-text {
+  color: rgba(25, 24, 22, 0.5);
+}
+
+.updates-input.valid-glow {
+  background: linear-gradient(90deg, #fff 0%, #fff 40%, currentColor 60%, currentColor 100%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-sweep 0.72s ease forwards;
+}
+
+[dir="rtl"] .updates-input.valid-glow {
+  background: linear-gradient(-90deg, #fff 0%, #fff 40%, currentColor 60%, currentColor 100%);
+  background-size: 300% 100%;
+  background-position: 0% 0;
+  animation: text-sweep-rtl 0.72s ease forwards;
+}
+
+@keyframes text-sweep {
+  from { background-position: 100% 0; }
+  to { background-position: 0% 0; }
+}
+
+@keyframes text-sweep-rtl {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
+.updates-message.valid {
+  background: linear-gradient(90deg, #fff 0%, #fff 40%, currentColor 60%, currentColor 100%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-sweep 0.72s ease forwards;
+}
+
+[dir="rtl"] .updates-message.valid {
+  background: linear-gradient(-90deg, #fff 0%, #fff 40%, currentColor 60%, currentColor 100%);
+  background-size: 300% 100%;
+  background-position: 0% 0;
+  animation: text-sweep-rtl 0.72s ease forwards;
+}
+
+.updates-measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+.updates-input::selection,
+.updates-input:focus::selection {
+  background: rgba(25, 24, 22, 0.2);
+  color: inherit;
+}
+
+.updates-enter {
+  margin-inline-start: 0;
+  position: relative;
+  top: 2px;
+  color: rgba(25, 24, 22, 0.6);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.updates-enter:hover {
+  color: var(--color-text-day);
+}
+
+.updates-message {
+  display: none;
+  font-size: var(--text-form);
+  font-family: inherit;
+  line-height: var(--leading-body);
+  color: inherit;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.updates-message:not([hidden]) {
+  display: block;
+}
+
+.theme-night .updates-input {
+  caret-color: rgba(240, 240, 240, 0.8);
+}
+
+.theme-night .updates-input.placeholder-text {
+  color: rgba(240, 240, 240, 0.45);
+}
+
+.theme-night .updates-enter {
+  color: rgba(240, 240, 240, 0.6);
+  cursor: pointer;
+}
+
+.theme-night .updates-enter:hover {
+  color: rgba(240, 240, 240, 1);
+}
+
+.theme-night .updates-input.valid-glow {
+  background: linear-gradient(90deg, #fff 0%, #fff 40%, currentColor 60%, currentColor 100%);
+  background-size: 300% 100%;
+  background-position: 100% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-sweep 0.72s ease forwards;
+}
+
+[dir="rtl"] .theme-night .updates-input.valid-glow {
+  background: linear-gradient(-90deg, #fff 0%, #fff 40%, currentColor 60%, currentColor 100%);
+  background-size: 300% 100%;
+  background-position: 0% 0;
+  animation: text-sweep-rtl 0.72s ease forwards;
+}
+
+/* ==========================================================================
+   404 Error Page
+   ========================================================================== */
+
+.error-text {
+  position: fixed;
+  top: 70%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateY(20px);
+  text-align: center;
+  font-family: var(--mono-font);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.02em;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s ease 2s, transform 1s ease 2s;
+}
+
+.page[data-page-type="404"] .error-text {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   Page + Content Variants
+   ========================================================================== */
+
+.letter-body {
+  text-wrap: pretty;
+  orphans: 3;
+  widows: 3;
+}
+
+.letter-body :is(h1, h2, h3, h4, h5, h6) {
+  text-wrap: balance;
+  break-after: avoid;
+}
+
+.page--prose .letter-body {
+  font-family: var(--serif-font);
+  font-weight: 400;
+  font-size: var(--text-reading);
+  line-height: var(--leading-body);
+}
+
+.page--prose .letter-body strong,
+.page--prose .letter-body b,
+.page--prose .letter-body a {
+  font-weight: 700;
+}
+
+.join-roles {
+  width: auto;
+  max-width: 100%;
+  border: 0;
+  border-collapse: collapse;
+}
+
+.join-roles td {
+  padding: 0;
+  border: 0;
+  vertical-align: baseline;
+}
+
+.join-role__title {
+  width: min(24rem, 60vw);
+}
+
+.join-role__title em {
+  display: block;
+  line-height: 1.4;
+}
+
+.join-role__spacer {
+  width: 10vw;
+  min-width: 10vw;
+}
+
+.page--prose .letter-body a.join-role__apply,
+.content-page .letter-body a.posts-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: normal var(--font-size-xs)/var(--leading-ui) var(--mono-font);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.page--prose .letter-body a.join-role__apply::after,
+.content-page .letter-body a.posts-action-link::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: url('/static/cursor-light.svg') center/contain no-repeat;
+  transform-origin: center;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+body:not(.theme-night) .page--prose .letter-body a.join-role__apply::after,
+body:not(.theme-night) .content-page .letter-body a.posts-action-link::after {
+  background-image: url('/static/cursor-dark.svg');
+}
+
+.content-page.page--prose .letter-body a.join-role__apply:hover,
+.content-page.page--posts .letter-body a.posts-action-link:hover {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.14em;
+}
+
+.page--prose .letter-body a.join-role__apply:hover::after,
+.content-page .letter-body a.posts-action-link:hover::after {
+  opacity: 1;
+  animation: navLinkStarSpin 1.15s linear infinite;
+}
+
+.page--purpose .prose-subheading {
+  font-weight: 600;
+}
+
+/* Indexes and forms use the stable body role. Individual post bodies receive
+   the reading role from .email-meta + .letter-body above. */
+.page--posts:not(.page--post-detail) .letter-body {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.page--post-detail .post-figure {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 32px 0;
+  overflow-x: clip;
+}
+
+.page--post-detail .post-figure img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.page--post-detail .post-figure figcaption {
+  margin-top: 8px;
+  font-size: 0.85em;
+  line-height: 1.35;
+  opacity: 0.75;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.section-heading {
+  margin: 0 0 10px;
+}
+
+.page--values .letter-body .section-heading {
+  margin-bottom: 10px;
+}
+
+.section-heading em strong {
+  font-size: var(--text-title);
+}
+
+.section-heading--spaced {
+  margin-top: 20px;
+}
+
+.disclosure {
+  margin: 0 0 6px;
+}
+
+.disclosure-summary {
+  list-style: none;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--color-text-day);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.disclosure-summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure-summary::before {
+  content: ">";
+  font-family: var(--mono-font);
+  font-size: var(--font-size-xs);
+  line-height: 1;
+  color: currentColor;
+  text-shadow: none;
+  transform-origin: center;
+  transition: transform 0.2s ease, color 0.2s ease;
+  margin-top: 3px;
+}
+
+.disclosure[open] .disclosure-summary::before {
+  transform: rotate(90deg);
+  color: currentColor;
+}
+
+.disclosure-summary:hover,
+.disclosure[open] .disclosure-summary:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.disclosure-summary:hover::before,
+.disclosure[open] .disclosure-summary:hover::before {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.disclosure-title {
+  display: block;
+  font-size: var(--text-title);
+  line-height: var(--leading-tight);
+  font-style: italic;
+  font-weight: 400;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+/* Cross-browser cap-height trimming for Plantin Now Italic. Its ascent is
+   0.75em, descent 0.25em, and cap height 0.682em. */
+.disclosure-title::before {
+  content: "";
+  display: table;
+  margin-bottom: -0.068em;
+}
+
+.disclosure-title::after {
+  content: "";
+  display: table;
+  margin-top: -0.25em;
+}
+
+.page--values .letter-body .icon-list {
+  margin: 6px 0 14px 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.icon-list > li {
+  margin: 0 0 3px;
+  position: relative;
+  padding-inline-start: 16px;
+}
+
+.icon-list--star > li::before {
+  content: "✶";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  color: var(--color-text-day);
+}
+
+.theme-night .disclosure-summary {
+  color: rgba(240, 240, 240, 0.8);
+}
+
+.theme-night .disclosure[open] .disclosure-summary::before {
+  color: rgba(240, 240, 240, 0.8);
+}
+
+.theme-night .disclosure-summary:hover,
+.theme-night .disclosure[open] .disclosure-summary:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.theme-night .disclosure-summary:hover::before,
+.theme-night .disclosure[open] .disclosure-summary:hover::before {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.theme-night .icon-list--star > li::before {
+  color: rgba(240, 240, 240, 0.8);
+}
+
+/* Readable page treatment */
+.content-page .letter-body a,
+.content-page .email-meta a,
+.content-page .letter-footer a {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.14em;
+}
+
+.content-page .letter-body a:hover,
+.content-page .email-meta a:hover,
+.content-page .letter-footer a:hover,
+.theme-night .content-page .letter-body a:hover,
+.theme-night .content-page .email-meta a:hover,
+.theme-night .content-page .letter-footer a:hover {
+  color: var(--color-text-day);
+  text-decoration-style: solid;
+}
+
+.theme-night .content-page .letter-body a:hover,
+.theme-night .content-page .email-meta a:hover,
+.theme-night .content-page .letter-footer a:hover {
+  color: #fff;
+}
+
+.content-page .email-meta {
+  padding-bottom: 24px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid rgba(39, 37, 34, 0.18);
+}
+
+.theme-night .content-page .email-meta {
+  border-bottom-color: rgba(244, 242, 238, 0.18);
+}
+
+.page--post-detail .letter-footer {
+  padding-top: 28px;
+  margin-top: 48px;
+  border-top: 1px solid rgba(39, 37, 34, 0.14);
+}
+
+.theme-night .page--post-detail .letter-footer {
+  border-top-color: rgba(244, 242, 238, 0.14);
+}
+
+.page--posts:not(.page--post-detail) .posts-list {
+  margin: 20px 0;
+}
+
+.page--posts:not(.page--post-detail) .posts-list li {
+  margin: 6px 0;
+}
+
+.page--posts:not(.page--post-detail) .posts-list li > a {
+  text-decoration: none;
+}
+
+@supports (grid-template-columns: subgrid) {
+  .page--posts:not(.page--post-detail) .posts-list {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 0.6em;
+    row-gap: 6px;
+  }
+
+  .page--posts:not(.page--post-detail) .posts-list li,
+  .page--posts:not(.page--post-detail) .posts-list li > a {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+
+  .page--posts:not(.page--post-detail) .posts-list li {
+    margin: 0;
+  }
+
+  .page--posts:not(.page--post-detail) .posts-list li > a {
+    align-items: baseline;
+  }
+
+  .page--posts:not(.page--post-detail) .posts-list .post-name {
+    margin-inline-start: 0;
+  }
+
+  @media (max-width: 32.5em) {
+    .page--posts:not(.page--post-detail) .posts-list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+.content-page .disclosure-summary {
+  color: inherit;
+  cursor: pointer;
+}
+
+.page--values .disclosure-summary {
+  align-items: center;
+  padding-block: 7px;
+  /* Follow the page's interpolated theme color directly. A second color
+     transition here repeatedly restarted and made the control flash. */
+  transition: none;
+}
+
+.page--values .disclosure-summary > em {
+  display: contents;
+}
+
+.page--values .disclosure-summary::before {
+  content: "";
+  box-sizing: border-box;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  margin-top: 0;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+}
+
+.page--values .disclosure-title {
+  transition: none;
+}
+
+.page--values .disclosure-summary:is(:hover, :focus-visible) .disclosure-title {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.14em;
+}
+
+/* Spinning star on hover, matching .nav-link. The summary's ::before is the
+   chevron and the title's pseudo-elements trim cap height, so the star lives
+   on the summary's ::after. */
+.page--values .disclosure-summary::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: url('/static/cursor-light.svg') center/contain no-repeat;
+  transform-origin: center;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+body:not(.theme-night) .page--values .disclosure-summary::after {
+  background-image: url('/static/cursor-dark.svg');
+}
+
+.page--values .disclosure-summary:is(:hover, :focus-visible)::after {
+  opacity: 1;
+  animation: navLinkStarSpin 1.15s linear infinite;
+}
+
+.content-page.page--values .disclosure[open] .disclosure-summary::before {
+  color: currentColor;
+  transform: rotate(45deg);
+}
+
+.content-page .disclosure-summary::before {
+  color: currentColor;
+  text-shadow: none;
+}
+
+.content-page .disclosure-summary:hover,
+.content-page .disclosure[open] .disclosure-summary:hover,
+.content-page .disclosure-summary:hover::before,
+.content-page .disclosure[open] .disclosure-summary:hover::before {
+  color: var(--color-text-day);
+}
+
+.theme-night .content-page .disclosure-summary {
+  color: inherit;
+  cursor: pointer;
+}
+
+.theme-night .content-page .disclosure-summary:hover,
+.theme-night .content-page .disclosure[open] .disclosure-summary:hover,
+.theme-night .content-page .disclosure-summary:hover::before,
+.theme-night .content-page .disclosure[open] .disclosure-summary:hover::before {
+  color: #fff;
+}
+
+@media (min-width: 801px) {
+  /* Navigation links reserve room for their hover star. Match that inset so
+     the MENU label and link text share the same right-hand alignment. */
+  .menu-trigger-toggle {
+    padding-inline-end: 21px;
+  }
+
+  /* Keep fixed footer controls outside the centered reading column on
+     intermediate widths, then ease them back to the shared desktop gutter. */
+  .site-footer-bar {
+    padding-inline: clamp(28px, calc(50vw - 520px), var(--frame-inline));
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1100px) {
+  .content-surface,
+  .page--prose .content-surface,
+  .page--post-detail .content-surface {
+    width: min(680px, calc(100vw - 360px));
+  }
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.mono-bold {
+  font-weight: 700;
+}
+
+.mono-light {
+  font-weight: 300;
+}
+
+.mono-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.mono-spaced {
+  letter-spacing: 0.3em;
+}
+
+/* ==========================================================================
+   Responsive: Medium (< 800px)
+   ========================================================================== */
+
+@media (max-width: 800px) {
+  :root {
+    --text-hero: var(--font-size-xl);
+    --hero-horizon-gap: 2rem;
+    --frame-inline: 40px;
+    --frame-block: 40px;
+    --frame-chrome-fade: 64px;
+    --frame-chrome-clearance: 20px;
+    --frame-content-top: calc(var(--frame-block) + 88px);
+    --frame-content-bottom: var(--frame-block);
+  }
+
+  body.mobile-menu-open {
+    overflow: hidden;
+  }
+
+  .site-header {
+    z-index: 220;
+  }
+
+  .site-footer-bar {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+  }
+
+  .top-nav {
+    z-index: 300;
+  }
+
+  .top-nav.has-overlap-backdrop::before {
+    display: none;
+  }
+
+  .menu-trigger {
+    justify-content: flex-end;
+  }
+
+  .menu-trigger-toggle {
+    min-height: 44px;
+    margin: -15px -10px;
+    padding: 15px 10px;
+  }
+
+  .top-nav .menu-links {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: calc(var(--frame-block) + 44px) var(--frame-inline) var(--frame-block);
+    align-items: flex-end;
+    gap: 8px;
+    color: var(--color-text-day);
+    animation: mobileMenuPanelIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .top-nav .menu-links::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-color: #faf9f6;
+    background-image:
+      linear-gradient(rgba(250, 249, 246, 0.97), rgba(250, 249, 246, 0.97)),
+      url('/static/paper.png');
+    background-size: auto, 260px 260px;
+    /* The menu surface fades across the left half, then remains fully opaque
+       behind the right-aligned navigation. */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 50%, #000 100%);
+    mask-image: linear-gradient(to right, transparent 0%, #000 50%, #000 100%);
+  }
+
+  .top-nav.is-closing .menu-links {
+    pointer-events: none;
+    animation: mobileMenuPanelOut 0.18s ease-in both;
+  }
+
+  .theme-night .top-nav .menu-links {
+    color: #fff;
+  }
+
+  .theme-night .top-nav .menu-links::before {
+    background-color: #2e2d2b;
+    background-image:
+      linear-gradient(rgba(46, 45, 43, 0.97), rgba(46, 45, 43, 0.97)),
+      url('/static/paper-dark.png');
+  }
+
+  .top-nav .menu-links[hidden] {
+    display: none;
+  }
+
+  .top-nav .menu-link-group {
+    position: relative;
+    z-index: 1;
+    width: auto;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .top-nav .menu-link-group--external {
+    margin-top: 8px;
+    padding-top: 0;
+    border: 0;
+  }
+
+  .top-nav .nav-link {
+    position: relative;
+    width: max-content;
+    min-width: 44px;
+    min-height: 44px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 0 0 16px;
+    justify-content: flex-end;
+    touch-action: manipulation;
+    text-align: end;
+    font-size: var(--text-ui);
+    line-height: var(--leading-ui);
+  }
+
+  .top-nav .nav-link::after {
+    position: absolute;
+    inset-inline-end: calc(100% + 6px);
+    pointer-events: none;
+  }
+
+  .menu-trigger-toggle:focus-visible,
+  .top-nav .nav-link:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  /* On scrolling pages, the fixed header gets an opaque-to-transparent veil.
+     Content remains visible as it passes underneath without colliding with
+     the logo or menu. */
+  body:has(.content-page) .site-header {
+    padding-bottom: calc(var(--frame-chrome-fade) + var(--frame-chrome-clearance));
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--chrome-surface), 1) 0%,
+      rgba(var(--chrome-surface), 1) calc(100% - var(--frame-chrome-fade)),
+      rgba(var(--chrome-surface), 0) 100%
+    );
+  }
+
+  .theme-night {
+    --chrome-surface: 46, 45, 43;
+  }
+
+  .content-page::before {
+    background: radial-gradient(
+      ellipse 88% 120% at 50% 48%,
+      rgba(var(--page-veil), 0.985) 0%,
+      rgba(var(--page-veil), 0.985) 42%,
+      rgba(var(--page-veil), 0.96) 52%,
+      rgba(var(--page-veil), 0.72) 64%,
+      rgba(var(--page-veil), 0.34) 76%,
+      rgba(var(--page-veil), 0) 92%
+    );
+  }
+
+  .content-surface,
+  .page--prose .content-surface,
+  .page--post-detail .content-surface {
+    width: min(100%, 680px);
+  }
+
+
+  .main-logo {
+    width: 88px;
+    max-width: 19vw;
+  }
+
+  body:has(.page[data-page-type="home"]) .center-logo,
+  body:has(.page[data-page-type="corner-logo"]) .center-logo {
+    margin-block-start: -10px;
+  }
+
+  body:has(.page[data-page-type="home"]) .main-logo,
+  body:has(.page[data-page-type="corner-logo"]) .main-logo {
+    width: 22px;
+    max-width: none;
+  }
+
+
+  @keyframes mobileMenuPanelIn {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes mobileMenuPanelOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .top-nav .menu-links {
+      animation-duration: 0.01ms;
+    }
+  }
+
+}
+
+/* ==========================================================================
+   Responsive: Small (< 520px)
+   ========================================================================== */
+
+@media (max-width: 520px) {
+  :root {
+    --frame-inline: 28px;
+    --frame-block: 28px;
+    --hero-horizon-gap: 1.5rem;
+  }
+
+  .content-page::before {
+    background: radial-gradient(
+      ellipse 88% 120% at 50% 48%,
+      rgba(var(--page-veil), 0.985) 0%,
+      rgba(var(--page-veil), 0.985) 42%,
+      rgba(var(--page-veil), 0.96) 52%,
+      rgba(var(--page-veil), 0.72) 64%,
+      rgba(var(--page-veil), 0.34) 76%,
+      rgba(var(--page-veil), 0) 92%
+    );
+  }
+
+  .bottom-controls {
+    gap: 8px;
+  }
+
+  #lang-toggle,
+  #theme-toggle {
+    padding: 6px 6px;
+  }
+
+  .lang-menu {
+    min-width: 140px;
+  }
+
+  .posts-list .post-name {
+    display: block;
+    margin-inline-start: 0;
+  }
+
+}
+
+/* ==========================================================================
+   Credit banner: an always-black strip on the bottom edge of the window.
+   The footer row sits just above it.
+   ========================================================================== */
+
+:root {
+  --credit-banner-height: 28px;
+}
+
+.theme-credit {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 300;
+  height: var(--credit-banner-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5ch;
+  background: #000;
+  color: rgba(255, 255, 255, 0.82);
+  font: normal var(--font-size-xs)/1 var(--mono-font);
+  letter-spacing: 0.02em;
+}
+
+.theme-credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.theme-credit a:hover {
+  color: #fff;
+}
+
+.site-footer-bar {
+  bottom: var(--credit-banner-height);
+}

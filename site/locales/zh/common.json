@@ -1,0 +1,20 @@
+{
+  "aria.appearanceLabel": "Appearance: {state}",
+  "aria.changeLanguage": "Change language",
+  "aria.closeMenu": "Close menu",
+  "aria.hero": "Veroku hero",
+  "aria.openMenu": "Open menu",
+  "aria.primaryNav": "Primary navigation",
+  "aria.purpose": "Veroku purpose",
+  "aria.selectLanguage": "Select language",
+  "aria.values": "Veroku values",
+  "meta.titleFormat": "{title} | Veroku",
+  "nav.menu": "菜单",
+  "nav.purpose": "宗旨",
+  "nav.values": "价值观",
+  "site.footer": "veroku",
+  "site.title": "VEROKU",
+  "theme.auto": "自动",
+  "theme.dark": "深色",
+  "theme.light": "浅色"
+}

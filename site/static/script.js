@@ -1,0 +1,2551 @@
+// Shared UI runtime namespace, populated by the IIFEs below.
+window.__earendilUiRuntime = window.__earendilUiRuntime || {};
+
+// Site menu toggle (top-right navigation)
+(function() {
+  var uiRuntime = window.__earendilUiRuntime;
+  var menuRuntime = uiRuntime.menu || (uiRuntime.menu = {});
+
+  function rectanglesOverlap(a, b, epsilon) {
+    if (!a || !b) return false;
+    var overlapX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+    var overlapY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+    return overlapX > epsilon && overlapY > epsilon;
+  }
+
+  function updateMenuOverlapBackdrop(menu) {
+    if (!menu) return;
+
+    var links = menu.querySelector('.menu-links');
+    var isOpen = menu.classList.contains('is-open') && links && !links.hidden;
+    if (!isOpen) {
+      menu.classList.remove('has-overlap-backdrop');
+      return;
+    }
+
+    var pageSurface = document.querySelector('.content-page .content-surface');
+    if (!pageSurface) {
+      menu.classList.remove('has-overlap-backdrop');
+      return;
+    }
+
+    var menuRect = menu.getBoundingClientRect();
+    var surfaceRect = pageSurface.getBoundingClientRect();
+    var shouldShowBackdrop = rectanglesOverlap(menuRect, surfaceRect, 1);
+    menu.classList.toggle('has-overlap-backdrop', shouldShowBackdrop);
+  }
+
+  function scheduleMenuOverlapBackdropUpdate(menu) {
+    if (!menu) return;
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(function() {
+        updateMenuOverlapBackdrop(menu);
+      });
+    } else {
+      setTimeout(function() {
+        updateMenuOverlapBackdrop(menu);
+      }, 0);
+    }
+  }
+
+  function syncMobileMenuState(menu) {
+    var isMobile = window.matchMedia('(max-width: 800px)').matches;
+    var isOpen = !!(menu && menu.classList.contains('is-open'));
+    document.body.classList.toggle('mobile-menu-open', isMobile && isOpen);
+  }
+
+  function setMenuExpanded(menu, isOpen) {
+    if (!menu) return;
+    var links = menu.querySelector('.menu-links');
+    var triggerButton = menu.querySelector('.menu-trigger-toggle');
+    var isMobile = window.matchMedia('(max-width: 800px)').matches;
+
+    if (menu._closeTimer) {
+      clearTimeout(menu._closeTimer);
+      menu._closeTimer = null;
+    }
+
+    if (isOpen) {
+      menu.classList.remove('is-closing');
+      if (links) links.hidden = false;
+      menu.classList.add('is-open');
+    } else {
+      menu.classList.remove('is-open');
+      if (links && !links.hidden && isMobile) {
+        menu.classList.add('is-closing');
+        menu._closeTimer = setTimeout(function() {
+          links.hidden = true;
+          menu.classList.remove('is-closing');
+          menu._closeTimer = null;
+        }, 180);
+      } else {
+        if (links) links.hidden = true;
+        menu.classList.remove('is-closing');
+      }
+    }
+
+    if (triggerButton) {
+      triggerButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      var menuKey = isOpen ? 'common.aria.closeMenu' : 'common.aria.openMenu';
+      triggerButton.setAttribute('aria-label', window.i18n.t(menuKey));
+    }
+    syncMobileMenuState(menu);
+    updateMenuOverlapBackdrop(menu);
+    scheduleMenuOverlapBackdropUpdate(menu);
+  }
+
+  function initSiteMenu() {
+    var menu = document.querySelector('[data-site-menu]');
+    if (!menu) return;
+
+    var triggerButton = menu.querySelector('.menu-trigger-toggle');
+    if (!triggerButton) return;
+
+    if (!triggerButton.dataset.initialized) {
+      triggerButton.dataset.initialized = 'true';
+
+      function toggleMenu() {
+        var isOpen = !menu.classList.contains('is-open');
+        setMenuExpanded(menu, isOpen);
+      }
+
+      function closeMenuOnMobile() {
+        if (!window.matchMedia('(max-width: 800px)').matches) return;
+        setMenuExpanded(menu, false);
+      }
+
+      triggerButton.addEventListener('click', toggleMenu);
+
+      var menuPanel = menu.querySelector('.menu-links');
+      if (menuPanel && !menuPanel.dataset.initialized) {
+        menuPanel.dataset.initialized = 'true';
+        menuPanel.addEventListener('click', function(event) {
+          if (event.target !== menuPanel) return;
+          setMenuExpanded(menu, false);
+          triggerButton.focus();
+        });
+      }
+
+      menu.querySelectorAll('.menu-links a').forEach(function(link) {
+        if (link.dataset.mobileCloseBound) return;
+        link.dataset.mobileCloseBound = 'true';
+        link.addEventListener('click', closeMenuOnMobile);
+      });
+
+      if (!menuRuntime.mobileMenuKeyboardBound) {
+        menuRuntime.mobileMenuKeyboardBound = true;
+        document.addEventListener('keydown', function(event) {
+          if (!window.matchMedia('(max-width: 800px)').matches) return;
+          var navMenu = document.querySelector('[data-site-menu].is-open');
+          if (!navMenu) return;
+
+          var navTrigger = navMenu.querySelector('.menu-trigger-toggle');
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            setMenuExpanded(navMenu, false);
+            if (navTrigger) navTrigger.focus();
+            return;
+          }
+
+          if (event.key !== 'Tab') return;
+          var focusable = Array.prototype.slice.call(
+            navMenu.querySelectorAll('.menu-trigger-toggle, .menu-links a')
+          ).filter(function(element) {
+            return !element.hidden && element.getClientRects().length > 0;
+          });
+          if (!focusable.length) return;
+
+          var first = focusable[0];
+          var last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        });
+      }
+
+      if (!menuRuntime.overlapBackdropBound) {
+        menuRuntime.overlapBackdropBound = true;
+
+        function refreshMenuOverlapBackdrop() {
+          var navMenu = document.querySelector('[data-site-menu]');
+          if (!navMenu) return;
+          syncMobileMenuState(navMenu);
+          updateMenuOverlapBackdrop(navMenu);
+          scheduleMenuOverlapBackdropUpdate(navMenu);
+        }
+
+        window.addEventListener('resize', refreshMenuOverlapBackdrop);
+        document.body.addEventListener('htmx:afterSettle', refreshMenuOverlapBackdrop);
+      }
+    }
+
+    updateMenuOverlapBackdrop(menu);
+    scheduleMenuOverlapBackdropUpdate(menu);
+  }
+
+  // Re-sync menu state when the active language changes, so the aria-label
+  // reflects the current open/close state in the new language.
+  window.addEventListener('languagechange', function() {
+    var menuList = document.querySelectorAll('[data-site-menu]');
+    menuList.forEach(function(navMenu) {
+      var triggerBtn = navMenu.querySelector('.menu-trigger-toggle');
+      if (!triggerBtn) return;
+      var open = navMenu.classList.contains('is-open');
+      var menuKey = open ? 'common.aria.closeMenu' : 'common.aria.openMenu';
+      triggerBtn.setAttribute('aria-label', window.i18n.t(menuKey));
+    });
+  });
+
+  initSiteMenu();
+  document.body.addEventListener('htmx:afterSettle', initSiteMenu);
+})();
+
+// Reveal ◊-delimited chunks in marked code blocks as each block enters the
+// viewport. CSS owns the fade and stagger; JavaScript only toggles visibility.
+(function() {
+  var codeRevealObserver = null;
+
+  function revealCodeBlock(codeBlock) {
+    codeBlock.classList.add('is-revealed');
+    if (codeRevealObserver) codeRevealObserver.unobserve(codeBlock);
+  }
+
+  function getCodeRevealObserver() {
+    if (codeRevealObserver || typeof IntersectionObserver !== 'function') {
+      return codeRevealObserver;
+    }
+
+    codeRevealObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) revealCodeBlock(entry.target);
+      });
+    }, {
+      threshold: 0.2,
+      rootMargin: '0px 0px -8% 0px'
+    });
+
+    return codeRevealObserver;
+  }
+
+  function initCodeReveals() {
+    document.querySelectorAll('[data-code-reveal]').forEach(function(codeBlock) {
+      if (codeBlock.dataset.revealInitialized) return;
+      codeBlock.dataset.revealInitialized = 'true';
+      codeBlock.classList.add('is-reveal-ready');
+
+      var observer = getCodeRevealObserver();
+      if (observer) {
+        observer.observe(codeBlock);
+      } else {
+        revealCodeBlock(codeBlock);
+      }
+    });
+  }
+
+  initCodeReveals();
+  document.body.addEventListener('htmx:afterSettle', initCodeReveals);
+})();
+
+// Replay a condensed Pi session in a terminal-like panel, the way Pi's TUI
+// draws it: the prompt is typed into the editor, the codemode script streams
+// in, its nested tool calls tick through, and the answer follows. The figure
+// carries a plain-text transcript that stays in place without JavaScript and
+// in feeds; the replay data comes from the JSON file named by the attribute.
+(function() {
+  var SPINNER = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  var CALL_PREVIEW_COUNT = 8;
+  var CANCELLED = {};
+  var replayObserver = null;
+
+  function node(tag, className, text) {
+    var element = document.createElement(tag);
+    if (className) element.className = className;
+    if (text != null) element.textContent = text;
+    return element;
+  }
+
+  function formatDuration(ms) {
+    return ms < 1000 ? Math.round(ms) + 'ms' : (ms / 1000).toFixed(1) + 's';
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function PiReplay(figure, data) {
+    this.figure = figure;
+    this.data = data;
+    this.run = 0;
+    this.spinnerTimer = null;
+    this.followOutput = true;
+    this.scriptLength = data.script.reduce(function(sum, token) {
+      return sum + token[1].length;
+    }, 0);
+    this.build();
+  }
+
+  PiReplay.prototype.build = function() {
+    var self = this;
+    var root = node('div', 'pi-replay__terminal');
+    root.setAttribute('aria-hidden', 'true');
+
+    this.chat = node('div', 'pi-replay__chat');
+    this.status = node('div', 'pi-replay__status');
+    this.statusSpinner = node('span', 'pi-replay__spinner');
+    this.status.appendChild(this.statusSpinner);
+    this.status.appendChild(node('span', 'pi-replay__muted', ' Working... (esc to abort)'));
+
+    var editor = node('div', 'pi-replay__editor');
+    this.editorText = node('span', 'pi-replay__editor-text');
+    editor.appendChild(this.editorText);
+    editor.appendChild(node('span', 'pi-replay__cursor', ' '));
+
+    var footer = node('div', 'pi-replay__footer');
+    footer.appendChild(node('span', null, this.data.cwd));
+    footer.appendChild(node('span', null, this.data.model));
+
+    root.appendChild(this.chat);
+    root.appendChild(this.status);
+    root.appendChild(editor);
+    root.appendChild(footer);
+
+    this.button = node('button', 'pi-replay__button', 'Skip');
+    this.button.type = 'button';
+    this.button.addEventListener('click', function() {
+      if (self.playing) {
+        self.showFinal();
+      } else {
+        self.play();
+      }
+    });
+
+    this.chat.addEventListener('scroll', function() {
+      var distance = self.chat.scrollHeight - self.chat.scrollTop - self.chat.clientHeight;
+      self.followOutput = distance < 24;
+    }, { passive: true });
+
+    var fallback = this.figure.querySelector('.pi-replay__fallback');
+    if (fallback) fallback.hidden = true;
+    var caption = this.figure.querySelector('figcaption');
+    this.figure.insertBefore(root, caption || null);
+    (caption || this.figure).appendChild(this.button);
+    this.figure.classList.add('is-ready');
+  };
+
+  PiReplay.prototype.scrollToEnd = function() {
+    if (this.followOutput) this.chat.scrollTop = this.chat.scrollHeight;
+  };
+
+  PiReplay.prototype.setWorking = function(isWorking) {
+    var self = this;
+    this.status.classList.toggle('is-active', isWorking);
+    clearInterval(this.spinnerTimer);
+    this.spinnerTimer = null;
+    if (!isWorking) return;
+    var frame = 0;
+    this.statusSpinner.textContent = SPINNER[0];
+    this.spinnerTimer = setInterval(function() {
+      if (!self.figure.isConnected) {
+        self.run++;
+        self.setWorking(false);
+        return;
+      }
+      frame = (frame + 1) % SPINNER.length;
+      self.statusSpinner.textContent = SPINNER[frame];
+    }, 80);
+  };
+
+  // Waits unless a newer run (replay or skip) has started in the meantime.
+  PiReplay.prototype.wait = function(run, ms) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        if (run === self.run) resolve(); else reject(CANCELLED);
+      }, ms);
+    });
+  };
+
+  PiReplay.prototype.frame = function(run) {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+      window.requestAnimationFrame(function(now) {
+        if (run === self.run) resolve(now); else reject(CANCELLED);
+      });
+    });
+  };
+
+  PiReplay.prototype.reset = function() {
+    this.chat.textContent = '';
+    this.editorText.textContent = '';
+    this.followOutput = true;
+    this.tool = null;
+    this.setWorking(false);
+  };
+
+  PiReplay.prototype.addUser = function() {
+    this.chat.appendChild(node('div', 'pi-replay__user', this.data.prompt));
+  };
+
+  PiReplay.prototype.addIntro = function() {
+    var intro = node('div', 'pi-replay__assistant');
+    this.chat.appendChild(intro);
+    return intro;
+  };
+
+  PiReplay.prototype.addTool = function() {
+    var box = node('div', 'pi-replay__tool is-pending');
+    box.appendChild(node('div', 'pi-replay__tool-title', 'codemode'));
+    var code = node('pre', 'pi-replay__code');
+    var calls = node('div', 'pi-replay__calls');
+    var output = node('pre', 'pi-replay__output');
+    calls.hidden = true;
+    output.hidden = true;
+    box.appendChild(code);
+    box.appendChild(calls);
+    box.appendChild(output);
+    this.chat.appendChild(box);
+    this.tool = { box: box, code: code, calls: calls, output: output };
+  };
+
+  // Streams the highlighted script up to `count` characters.
+  PiReplay.prototype.renderScript = function(count) {
+    var code = this.tool.code;
+    code.textContent = '';
+    var remaining = count;
+    for (var i = 0; i < this.data.script.length && remaining > 0; i++) {
+      var token = this.data.script[i];
+      var text = token[1].length > remaining ? token[1].slice(0, remaining) : token[1];
+      remaining -= text.length;
+      if (token[0]) {
+        code.appendChild(node('span', 'pi-replay__syn-' + token[0], text));
+      } else {
+        code.appendChild(document.createTextNode(text));
+      }
+    }
+  };
+
+  // Mirrors the codemode renderer: the most recent nested calls with their
+  // status, and a count of the earlier ones that scrolled out.
+  PiReplay.prototype.renderCalls = function(simTime) {
+    var calls = this.data.calls;
+    var started = 0;
+    while (started < calls.length && calls[started].t <= simTime) started++;
+    var container = this.tool.calls;
+    container.hidden = started === 0;
+    container.textContent = '';
+    var first = Math.max(0, started - CALL_PREVIEW_COUNT);
+    if (first > 0) {
+      container.appendChild(node('div', 'pi-replay__muted',
+        '... (' + first + ' earlier calls, ctrl+o to expand)'));
+    }
+    for (var i = first; i < started; i++) {
+      var call = calls[i];
+      var done = simTime >= call.t + call.d;
+      var line = node('div', 'pi-replay__call');
+      line.appendChild(node('span', done ? 'pi-replay__ok' : 'pi-replay__running', done ? '✓' : '…'));
+      line.appendChild(document.createTextNode(' ' + call.name + ' '));
+      line.appendChild(node('span', 'pi-replay__muted', call.args));
+      if (done) line.appendChild(node('span', 'pi-replay__dim', ' ' + formatDuration(call.d)));
+      container.appendChild(line);
+    }
+  };
+
+  PiReplay.prototype.finishTool = function() {
+    this.tool.box.classList.remove('is-pending');
+    this.tool.box.classList.add('is-success');
+    this.tool.output.hidden = false;
+    this.tool.output.textContent = this.data.output;
+  };
+
+  PiReplay.prototype.addAnswer = function() {
+    var answer = node('div', 'pi-replay__assistant pi-replay__answer');
+    this.chat.appendChild(answer);
+    return answer;
+  };
+
+  // Answer blocks are authored markup from the replay JSON, not session text.
+  PiReplay.prototype.answerBlock = function(block) {
+    var element;
+    if (block[0] === 'ul') {
+      element = node('ul');
+      block[1].forEach(function(item) {
+        var li = node('li');
+        li.innerHTML = item;
+        element.appendChild(li);
+      });
+    } else {
+      element = node('p');
+      element.innerHTML = block[1];
+    }
+    return element;
+  };
+
+  PiReplay.prototype.showFinal = function() {
+    this.run++;
+    this.playing = false;
+    this.reset();
+    this.addUser();
+    this.addIntro().textContent = this.data.intro;
+    this.addTool();
+    this.renderScript(this.scriptLength);
+    this.renderCalls(Infinity);
+    this.finishTool();
+    var answer = this.addAnswer();
+    var self = this;
+    this.data.answer.forEach(function(block) {
+      answer.appendChild(self.answerBlock(block));
+    });
+    this.button.textContent = 'Replay';
+    this.chat.scrollTop = 0;
+  };
+
+  PiReplay.prototype.play = function() {
+    var self = this;
+    var run = ++this.run;
+    this.playing = true;
+    this.button.textContent = 'Skip';
+    this.reset();
+    this.sequence(run).then(function() {
+      if (run !== self.run) return;
+      self.playing = false;
+      self.button.textContent = 'Replay';
+    }, function(error) {
+      if (error !== CANCELLED) throw error;
+    });
+  };
+
+  PiReplay.prototype.sequence = async function(run) {
+    var data = this.data;
+    var i;
+
+    await this.wait(run, 500);
+    for (i = 1; i <= data.prompt.length; i++) {
+      this.editorText.textContent = data.prompt.slice(0, i);
+      await this.wait(run, 18 + (data.prompt[i - 1] === ' ' ? 30 : 0));
+    }
+    await this.wait(run, 450);
+    this.editorText.textContent = '';
+    this.addUser();
+    this.setWorking(true);
+    this.scrollToEnd();
+
+    await this.wait(run, 900);
+    var intro = this.addIntro();
+    var words = data.intro.split(' ');
+    for (i = 1; i <= words.length; i++) {
+      intro.textContent = words.slice(0, i).join(' ');
+      this.scrollToEnd();
+      await this.wait(run, 35);
+    }
+
+    await this.wait(run, 400);
+    this.addTool();
+    var start = await this.frame(run);
+    var shown = 0;
+    while (shown < this.scriptLength) {
+      var now = await this.frame(run);
+      shown = Math.min(this.scriptLength, Math.round((now - start) * 0.9));
+      this.renderScript(shown);
+      this.scrollToEnd();
+    }
+
+    // Play the nested calls in simulated time: close to real time at first
+    // so the individual calls are readable, then fast-forward.
+    await this.wait(run, 300);
+    var simTime = 0;
+    var last = await this.frame(run);
+    var elapsed = 0;
+    while (simTime < data.wallMs) {
+      var frameTime = await this.frame(run);
+      var delta = Math.min(frameTime - last, 50);
+      last = frameTime;
+      elapsed += delta;
+      simTime += delta * Math.min(24, 1 + elapsed / 160);
+      this.renderCalls(Math.min(simTime, data.wallMs));
+      this.scrollToEnd();
+    }
+
+    await this.wait(run, 250);
+    this.finishTool();
+    this.scrollToEnd();
+
+    await this.wait(run, 900);
+    var answer = this.addAnswer();
+    for (i = 0; i < data.answer.length; i++) {
+      answer.appendChild(this.answerBlock(data.answer[i]));
+      this.scrollToEnd();
+      await this.wait(run, 320);
+    }
+    this.setWorking(false);
+  };
+
+  function startReplay(figure) {
+    var replay = figure.__piReplay;
+    if (!replay || replay.started) return;
+    replay.started = true;
+    if (replayObserver) replayObserver.unobserve(figure);
+    if (prefersReducedMotion()) {
+      replay.showFinal();
+    } else {
+      replay.play();
+    }
+  }
+
+  function getReplayObserver() {
+    if (replayObserver || typeof IntersectionObserver !== 'function') return replayObserver;
+    replayObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) startReplay(entry.target);
+      });
+    }, { threshold: 0.45 });
+    return replayObserver;
+  }
+
+  function initPiReplays() {
+    document.querySelectorAll('[data-pi-replay]').forEach(function(figure) {
+      if (figure.dataset.replayInitialized) return;
+      figure.dataset.replayInitialized = 'true';
+      fetch(figure.getAttribute('data-pi-replay'))
+        .then(function(response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return response.json();
+        })
+        .then(function(data) {
+          if (!figure.isConnected) return;
+          figure.__piReplay = new PiReplay(figure, data);
+          var observer = getReplayObserver();
+          if (observer) observer.observe(figure); else startReplay(figure);
+        })
+        .catch(function() {
+          // Keep the static transcript.
+        });
+    });
+  }
+
+  initPiReplays();
+  document.body.addEventListener('htmx:afterSettle', initPiReplays);
+})();
+
+// Terminal recordings (asciinema). A figure lists its chapters in an <ol>,
+// which is the no-JS fallback. With JavaScript, the list becomes an
+// asciinema-player with a caption below it: playback pauses at every chapter,
+// shows the chapter's caption, and continues after a short countdown. The
+// player is only downloaded on pages that embed a recording.
+//
+// Figures without chapters just play. data-asciicast-loop loops playback, and
+// data-asciicast-themes adds a theme picker below the player (see ThemePicker).
+(function() {
+  var PLAYER_JS = '/static/asciinema-player/asciinema-player.min.js';
+  var PLAYER_CSS = '/static/asciinema-player/asciinema-player.css';
+  var FONT_FAMILY = "'Commit Mono', ui-monospace, monospace";
+  var CHAPTER_PAUSE_MS = 2500;
+  var PICK_FADE_MS = 300; // fade when picking a terminal theme
+  var playerLoad = null;
+  var castObserver = null;
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // htmx's head-support extension makes <head> match each page it navigates
+  // to and would drop these injected tags; hx-preserve keeps them.
+  function loadPlayerCss() {
+    var existing = document.querySelector('link[data-asciinema-player]');
+    if (existing) return existing.__loaded;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = PLAYER_CSS;
+    link.setAttribute('hx-preserve', 'true');
+    link.setAttribute('data-asciinema-player', '');
+    link.__loaded = new Promise(function(resolve, reject) {
+      link.onload = resolve;
+      link.onerror = function(error) {
+        link.remove(); // allow a retry
+        reject(error);
+      };
+    });
+    document.head.appendChild(link);
+    return link.__loaded;
+  }
+
+  function loadPlayer() {
+    // The player renders unstyled without its CSS, so make sure it is still
+    // in <head> even when the script itself is already loaded.
+    var css = loadPlayerCss();
+    if (playerLoad) {
+      return Promise.all([playerLoad, css]).then(function(results) {
+        return results[0];
+      });
+    }
+    var js = new Promise(function(resolve, reject) {
+      var script = document.createElement('script');
+      script.setAttribute('hx-preserve', 'true');
+      script.src = PLAYER_JS;
+      script.onload = function() { resolve(window.AsciinemaPlayer); };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+    // The player measures the font when it is created, so load it first.
+    var fonts = document.fonts ? Promise.all([
+      document.fonts.load('400 15px "Commit Mono"'),
+      document.fonts.load('700 15px "Commit Mono"'),
+      document.fonts.load('italic 400 15px "Commit Mono"')
+    ]).catch(function() {}) : Promise.resolve();
+    playerLoad = Promise.all([js, css, fonts]).then(function(results) {
+      return results[0];
+    });
+    playerLoad.catch(function() { playerLoad = null; });
+    return playerLoad;
+  }
+
+  function loadThemes(url) {
+    if (!url) return Promise.resolve(null);
+    return fetch(url).then(function(response) {
+      if (!response.ok) throw new Error('Failed to load ' + url);
+      return response.json();
+    });
+  }
+
+  // "1:14.8" -> 74.8
+  function parseTime(value) {
+    return String(value || '0').split(':').reduce(function(total, part) {
+      return total * 60 + parseFloat(part || '0');
+    }, 0);
+  }
+
+  function node(tag, className) {
+    var el = document.createElement(tag);
+    el.className = className;
+    return el;
+  }
+
+  function Cast(figure, list) {
+    this.figure = figure;
+    this.chapters = list ? Array.prototype.map.call(list.children, function(item) {
+      return {
+        time: parseTime(item.getAttribute('data-start')),
+        label: item.textContent.trim(),
+        html: item.innerHTML
+      };
+    }) : [];
+    this.chapter = -1;
+    this.timer = null;
+    this.player = null;
+    this.started = false;
+    this.caption = null;
+
+    this.mount = node('div', 'asciicast__player');
+    figure.insertBefore(this.mount, figure.firstChild);
+
+    if (this.chapters.length) {
+      this.caption = node('figcaption', 'asciicast__caption');
+      this.captionText = node('span', 'asciicast__caption-text');
+      this.countdown = node('span', 'asciicast__countdown');
+      this.countdown.setAttribute('aria-hidden', 'true');
+      this.countdown.style.setProperty('--asciicast-pause', CHAPTER_PAUSE_MS + 'ms');
+      this.caption.setAttribute('aria-live', 'polite');
+      this.caption.appendChild(this.captionText);
+      this.caption.appendChild(this.countdown);
+      figure.appendChild(this.caption);
+    }
+
+    figure.classList.add('is-enhanced');
+    this.setChapter(0);
+  }
+
+  Cast.prototype.setChapter = function(index) {
+    if (!this.chapters.length) return;
+    index = Math.max(0, Math.min(index, this.chapters.length - 1));
+    if (index === this.chapter) return;
+    this.chapter = index;
+    this.captionText.innerHTML = this.chapters[index].html;
+  };
+
+  Cast.prototype.chapterAt = function(time) {
+    var index = 0;
+    for (var i = 0; i < this.chapters.length; i++) {
+      if (this.chapters[i].time <= time + 0.05) index = i;
+    }
+    return index;
+  };
+
+  Cast.prototype.syncChapter = function() {
+    if (!this.chapters.length) return;
+    var self = this;
+    Promise.resolve(this.player.getCurrentTime()).then(function(time) {
+      self.setChapter(self.chapterAt(time || 0));
+    });
+  };
+
+  // Hold for a moment, with an indicator sliding to the right, then continue.
+  Cast.prototype.continueAfterPause = function() {
+    var self = this;
+    this.cancelCountdown();
+    void this.countdown.offsetWidth; // restart the CSS animation
+    this.figure.classList.add('is-counting-down');
+    this.timer = window.setTimeout(function() {
+      self.timer = null;
+      self.figure.classList.remove('is-counting-down');
+      if (self.figure.isConnected) self.player.play();
+    }, CHAPTER_PAUSE_MS);
+  };
+
+  Cast.prototype.cancelCountdown = function() {
+    if (this.timer !== null) window.clearTimeout(this.timer);
+    this.timer = null;
+    this.figure.classList.remove('is-counting-down');
+  };
+
+  Cast.prototype.create = function(AsciinemaPlayer) {
+    var self = this;
+    var poster = this.figure.getAttribute('data-asciicast-poster');
+    var options = {
+      fit: 'width',
+      theme: 'pi',
+      terminalFontFamily: FONT_FAMILY,
+      preload: true,
+      loop: this.figure.hasAttribute('data-asciicast-loop')
+    };
+    if (this.chapters.length) {
+      options.markers = this.chapters.slice(1).map(function(chapter) {
+        return [chapter.time, chapter.label];
+      });
+      options.pauseOnMarkers = true;
+    }
+    if (poster) options.poster = 'npt:' + poster;
+    this.player = AsciinemaPlayer.create(
+      this.figure.getAttribute('data-asciicast'), this.mount, options
+    );
+
+    this.player.addEventListener('marker', function(event) {
+      self.setChapter(event.index + 1);
+      self.continueAfterPause();
+    });
+    // Manual play, seeking, or a replay after the end: drop any pending
+    // countdown and show the caption for wherever playback is now.
+    this.player.addEventListener('play', function() {
+      self.cancelCountdown();
+      self.syncChapter();
+    });
+    this.player.addEventListener('seeked', function() {
+      self.syncChapter();
+    });
+  };
+
+  Cast.prototype.start = function() {
+    if (this.started || !this.player) return;
+    this.started = true;
+    if (castObserver) castObserver.unobserve(this.figure);
+    if (prefersReducedMotion()) return;
+    if (this.chapters.length) this.continueAfterPause();
+    else this.player.play();
+  };
+
+  // Rows of terminal themes below the player. Each theme is a full palette:
+  // the terminal's foreground, background and 16 ANSI colors, followed by the
+  // colors Pi's system theme generates from them, one 256-color index per
+  // Pi color token (scripts/pi-system-themes.mts). The recording draws Pi's
+  // tokens in those indices, so switching the palette recolors it like Pi
+  // would in that terminal, without interrupting playback. Themes come in
+  // display order.
+  //
+  // The picker follows the page: on a night page it shows a dark theme, on a
+  // day page a light one, starting with data.initial and switching when the
+  // page does. It remembers the last pick for each appearance.
+  function ThemePicker(cast, data) {
+    var self = this;
+    this.cast = cast;
+    this.themes = data.themes;
+    this.tokenIndex = {};
+    data.tokens.forEach(function(token, index) {
+      self.tokenIndex[token] = data.firstTokenIndex + index;
+    });
+    this.buttons = [];
+    this.selected = -1;
+    this.chosen = {};
+    this.shown = null; // colors on screen: foreground, background, palette
+    this.frame = null; // pending fade frame
+    ['dark', 'light'].forEach(function(appearance) {
+      var name = (data.initial || {})[appearance];
+      var index = -1;
+      self.themes.forEach(function(theme, i) {
+        if (theme.appearance !== appearance) return;
+        if (index === -1 || theme.name === name) index = i;
+      });
+      self.chosen[appearance] = index;
+    });
+
+    this.el = node('div', 'asciicast__themes');
+    this.el.setAttribute('role', 'radiogroup');
+    this.el.setAttribute('aria-label', 'Terminal theme');
+    this.label = node('figcaption', 'asciicast__theme-current');
+    this.label.setAttribute('aria-hidden', 'true');
+
+    ['dark', 'light'].forEach(function(appearance) {
+      var group = node('div', 'asciicast__theme-group');
+      self.themes.forEach(function(theme, index) {
+        if (theme.appearance === appearance) group.appendChild(self.button(theme, index));
+      });
+      self.el.appendChild(group);
+    });
+
+    // Arrow keys move through all themes, as in a radio group.
+    this.el.addEventListener('keydown', function(event) {
+      var order = self.buttons.map(function(button) { return Number(button.dataset.index); });
+      var position = order.indexOf(self.selected);
+      var next = null;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (position + 1) % order.length;
+      else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (position - 1 + order.length) % order.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = order.length - 1;
+      if (next === null) return;
+      event.preventDefault();
+      self.select(order[next], PICK_FADE_MS);
+      self.buttons[next].focus();
+    });
+    this.el.addEventListener('mouseleave', function() { self.showName(self.selected); });
+    this.el.addEventListener('focusout', function() { self.showName(self.selected); });
+
+    cast.figure.appendChild(this.el);
+    cast.figure.appendChild(this.label);
+    this.followPage();
+
+    // Themes picked in the post's other figures (pi:theme, color-spaces.js),
+    // so that every picker shows the same one. Selecting one announces it
+    // as asciicast:theme, which those figures ignore for their own theme.
+    this.onTheme = function(event) {
+      if (!cast.figure.isConnected) {
+        document.body.removeEventListener('pi:theme', self.onTheme);
+        return;
+      }
+      var name = event.detail && event.detail.name;
+      var index = self.themes.map(function(theme) { return theme.name; }).indexOf(name);
+      if (index !== -1 && index !== self.selected) self.select(index, PICK_FADE_MS);
+    };
+    document.body.addEventListener('pi:theme', this.onTheme);
+
+    // The site switches appearance by toggling theme-night on <body>.
+    var observer = new MutationObserver(function() {
+      if (!cast.figure.isConnected) {
+        observer.disconnect();
+        return;
+      }
+      self.followPage();
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  ThemePicker.prototype.followPage = function() {
+    var appearance = document.body.classList.contains('theme-night') ? 'dark' : 'light';
+    var current = this.themes[this.selected];
+    if (current && current.appearance === appearance) return;
+    this.select(this.chosen[appearance], pageFadeMs());
+  };
+
+  ThemePicker.prototype.color = function(theme, token) {
+    return theme.palette[this.tokenIndex[token]];
+  };
+
+  ThemePicker.prototype.button = function(theme, index) {
+    var self = this;
+    var button = node('button', 'asciicast__theme');
+    button.type = 'button';
+    button.dataset.index = String(index);
+    button.setAttribute('role', 'radio');
+    button.setAttribute('aria-label', theme.name);
+    button.title = theme.name;
+    // A tiny terminal: Pi's accent, text and success colors on the background.
+    button.style.setProperty('--swatch-bg', theme.background);
+    var swatch = node('span', 'asciicast__swatch');
+    ['accent', 'text', 'success'].forEach(function(token) {
+      var line = node('span', 'asciicast__swatch-line');
+      line.style.background = self.color(theme, token);
+      swatch.appendChild(line);
+    });
+    button.appendChild(swatch);
+    button.addEventListener('click', function() { self.select(index, PICK_FADE_MS); });
+    button.addEventListener('mouseenter', function() { self.showName(index); });
+    button.addEventListener('focus', function() { self.showName(index); });
+    this.buttons.push(button);
+    return button;
+  };
+
+  ThemePicker.prototype.showName = function(index) {
+    var theme = this.themes[index];
+    if (theme) this.label.textContent = theme.name;
+  };
+
+  // Switches to a theme, fading the colors over fadeMs (instantly without).
+  ThemePicker.prototype.select = function(index, fadeMs) {
+    var theme = this.themes[index];
+    if (!theme) return;
+    this.selected = index;
+    this.chosen[theme.appearance] = index;
+    this.buttons.forEach(function(button) {
+      var checked = Number(button.dataset.index) === index;
+      button.setAttribute('aria-checked', checked ? 'true' : 'false');
+      button.tabIndex = checked ? 0 : -1;
+    });
+    this.showName(index);
+    this.cast.figure.dataset.colorBackground = theme.background;
+    // The ANSI colors, for visualizations that use a theme's palette slots.
+    this.cast.figure.dataset.colorPalette = theme.palette.slice(0, 16).join(' ');
+    this.cast.figure.dataset.colorTheme = theme.name;
+    this.cast.figure.dispatchEvent(new CustomEvent('asciicast:theme', { bubbles: true }));
+    var colors = [theme.foreground, theme.background].concat(theme.palette);
+    this.fadeTo(colors, prefersReducedMotion() ? 0 : fadeMs || 0);
+  };
+
+  // Fades from the colors on screen to new ones: every animation frame sets a
+  // palette mixed in OKLab, so the recording keeps playing while it recolors.
+  // A fade that starts during another continues from the colors on screen.
+  ThemePicker.prototype.fadeTo = function(colors, duration) {
+    var self = this;
+    if (this.frame) cancelAnimationFrame(this.frame);
+    this.frame = null;
+    if (!this.shown || duration <= 0) {
+      this.show(colors);
+      return;
+    }
+    var from = this.shown.map(hexToOklab);
+    var to = colors.map(hexToOklab);
+    var start = null;
+    var step = function(now) {
+      if (!self.cast.figure.isConnected) return;
+      if (start === null) start = now;
+      var t = Math.min(1, (now - start) / duration);
+      if (t >= 1) {
+        self.frame = null;
+        self.show(colors);
+        return;
+      }
+      // The page's theme easing, cubic-bezier(1/3, 0, 2/3, 1), is smoothstep.
+      var eased = t * t * (3 - 2 * t);
+      self.show(from.map(function(a, i) {
+        var b = to[i];
+        return oklabToHex([
+          a[0] + (b[0] - a[0]) * eased,
+          a[1] + (b[1] - a[1]) * eased,
+          a[2] + (b[2] - a[2]) * eased
+        ]);
+      }));
+      self.frame = requestAnimationFrame(step);
+    };
+    this.frame = requestAnimationFrame(step);
+  };
+
+  // colors: foreground, background, then the palette.
+  ThemePicker.prototype.show = function(colors) {
+    this.shown = colors;
+    this.cast.mount.style.background = colors[1];
+    this.cast.player.setTheme({
+      foreground: colors[0],
+      background: colors[1],
+      palette: colors.slice(2)
+    });
+  };
+
+  function srgbToLinear(channel) {
+    var value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+  }
+
+  function linearToSrgb(value) {
+    var srgb = value <= 0.0031308 ? value * 12.92 : 1.055 * Math.pow(value, 1 / 2.4) - 0.055;
+    return Math.round(Math.min(1, Math.max(0, srgb)) * 255);
+  }
+
+  function hexToOklab(hex) {
+    var value = parseInt(hex.slice(1), 16);
+    var r = srgbToLinear((value >> 16) & 255);
+    var g = srgbToLinear((value >> 8) & 255);
+    var b = srgbToLinear(value & 255);
+    var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    return [
+      0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+      1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+      0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+    ];
+  }
+
+  function oklabToHex(lab) {
+    var l = Math.pow(lab[0] + 0.3963377774 * lab[1] + 0.2158037573 * lab[2], 3);
+    var m = Math.pow(lab[0] - 0.1055613458 * lab[1] - 0.0638541728 * lab[2], 3);
+    var s = Math.pow(lab[0] - 0.0894841775 * lab[1] - 1.2914855480 * lab[2], 3);
+    var rgb = [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+    ];
+    return '#' + rgb.map(function(channel) {
+      return (linearToSrgb(channel) | 256).toString(16).slice(1);
+    }).join('');
+  }
+
+  // How long the page takes to fade between day and night (styles.css).
+  function pageFadeMs() {
+    var value = getComputedStyle(document.body).getPropertyValue('--theme-transition-duration').trim();
+    var ms = parseFloat(value) * (/ms$/.test(value) ? 1 : 1000);
+    return isFinite(ms) ? ms : 900;
+  }
+
+  function getCastObserver() {
+    if (castObserver || typeof IntersectionObserver !== 'function') return castObserver;
+    castObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting && entry.target.__asciicast) {
+          entry.target.__asciicast.start();
+        }
+      });
+    }, { threshold: 0.6 });
+    return castObserver;
+  }
+
+  function initAsciicasts() {
+    document.querySelectorAll('[data-asciicast]').forEach(function(figure) {
+      if (figure.dataset.asciicastInitialized) return;
+      var list = figure.querySelector('.asciicast__chapters');
+      if (list && !list.children.length) return;
+      figure.dataset.asciicastInitialized = 'true';
+      var cast = new Cast(figure, list);
+      Promise.all([loadPlayer(), loadThemes(figure.getAttribute('data-asciicast-themes'))])
+        .then(function(results) {
+          if (!figure.isConnected) return;
+          cast.create(results[0]);
+          // Without its palettes, a recording made for them shows wrong colors,
+          // so a failed theme load falls back like a failed player load.
+          if (results[1]) new ThemePicker(cast, results[1]);
+          figure.__asciicast = cast;
+          figure.dispatchEvent(new CustomEvent('asciicast:ready', { bubbles: true }));
+          var observer = getCastObserver();
+          if (observer) observer.observe(figure); else cast.start();
+        })
+        .catch(function() {
+          // Fall back to the chapter list or fallback text.
+          figure.classList.remove('is-enhanced');
+          cast.mount.remove();
+          if (cast.caption) cast.caption.remove();
+        });
+    });
+  }
+
+  initAsciicasts();
+  document.body.addEventListener('htmx:afterSettle', initAsciicasts);
+})();
+
+// Rotatable color spaces, <figure data-color-space>, and Pi's lightness
+// curves, <figure data-lightness-curves> (color-spaces.js). The script is
+// only downloaded on pages that have one.
+(function() {
+  var loading = false;
+
+  function loadColorSpaces() {
+    if (loading || !document.querySelector('[data-color-space], [data-lightness-curves]')) return;
+    loading = true;
+    // htmx's head-support extension would drop the injected tag otherwise.
+    var script = document.createElement('script');
+    script.setAttribute('hx-preserve', 'true');
+    script.src = '/static/color-spaces.js';
+    script.onerror = function() {
+      script.remove(); // allow a retry
+      loading = false;
+    };
+    document.head.appendChild(script);
+  }
+
+  loadColorSpaces();
+  document.body.addEventListener('htmx:afterSettle', loadColorSpaces);
+})();
+
+// WebGL ocean rendering (runs once)
+(function() {
+if (window.__earendilInitialized) return;
+window.__earendilInitialized = true;
+
+const canvas = document.getElementById('canvas');
+const logo = document.getElementById('logo');
+const themeToggle = document.getElementById('theme-toggle');
+const gl = canvas.getContext('webgl');
+
+const LOGO_SVG_URL = (logo && logo.getAttribute('src')) || '/static/veroku-mark.svg';
+
+const THEME_STORAGE_KEY = 'earendil-theme-mode';
+const THEME_MODES = ['auto', 'night', 'day'];
+function getThemeLabel(mode) {
+  if (window.i18n) {
+    var keys = { auto: 'common.theme.auto', night: 'common.theme.dark', day: 'common.theme.light' };
+    return window.i18n.t(keys[mode] || keys.auto);
+  }
+  var fallbacks = { auto: 'AUTO', night: 'DARK', day: 'LIGHT' };
+  return fallbacks[mode] || fallbacks.auto;
+}
+
+// Quality settings for slower computers
+const QUALITY_LEVELS = ['low', 'medium', 'high'];
+const QUALITY_SETTINGS = {
+  low: {
+    scale: 0.25,
+    lowDpiScale: 0.425,  // 1.7x for low DPI screens
+    raymarchSteps: 16,
+    waveIterRaymarch: 4,
+    waveIterNormal: 16
+  },
+  medium: {
+    scale: 0.35,
+    lowDpiScale: 0.595,  // 1.7x for low DPI screens
+    raymarchSteps: 20,
+    waveIterRaymarch: 6,
+    waveIterNormal: 16
+  },
+  high: {
+    scale: 0.4,
+    lowDpiScale: 0.68,   // 1.7x for low DPI screens
+    raymarchSteps: 24,
+    waveIterRaymarch: 8,
+    waveIterNormal: 16
+  }
+};
+
+// Low DPI threshold and noise scale multiplier
+const LOW_DPI_THRESHOLD = 1.5;
+const LOW_DPI_NOISE_SCALE = 1.7;
+
+let currentQuality = 'high';
+
+// Reduced motion keeps the ocean alive as a quiet ambient surface rather than
+// freezing it. Apply the same treatment automatically whenever a content-page
+// background is present so the ocean is less distracting while reading. Film
+// grain is only slowed slightly because it does not create the same sense of
+// spatial movement as the waves.
+const motionPreferenceQuery = window.matchMedia
+  ? window.matchMedia('(prefers-reduced-motion: reduce)')
+  : null;
+const REDUCED_MOTION_WAVE_SPEED = 0.15;
+const REDUCED_MOTION_GRAIN_SPEED = 0.75;
+const AMBIENT_MOTION_SPEED_TRANSITION_DURATION = 3.0;
+const CONTENT_PAGE_RENDER_FPS = 15;
+const CONTENT_PAGE_RENDER_INTERVAL = 1000 / CONTENT_PAGE_RENDER_FPS;
+const CONTENT_PAGE_RESOLUTION_SCALE = 0.5;
+
+function isContentPage() {
+  return !!document.querySelector('.content-page');
+}
+
+// Direct content-page loads begin with slow ambient motion, so they can use the
+// reduced resolution from the first frame.
+let contentPageResolutionReduced = isContentPage();
+
+function shouldReduceAmbientMotion(contentPage) {
+  const userPrefersReducedMotion = motionPreferenceQuery
+    ? motionPreferenceQuery.matches
+    : false;
+  return userPrefersReducedMotion || contentPage;
+}
+
+// Adaptive quality settings
+const AUTO_QUALITY_FPS_LOW = 28;      // Drop quality if FPS below this
+const AUTO_QUALITY_FPS_HIGH = 55;     // Increase quality if FPS above this
+const AUTO_QUALITY_SAMPLE_TIME = 2000; // Time window to average FPS (ms)
+const AUTO_QUALITY_COOLDOWN = 4000;   // Minimum time between quality changes (ms)
+let autoQualityFpsHistory = [];
+let lastQualityChangeTime = 0;
+
+function loadThemeMode() {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (THEME_MODES.includes(stored)) {
+      return stored;
+    }
+  } catch (error) {
+    console.warn('Unable to access localStorage for theme mode.', error);
+  }
+  return 'auto';
+}
+
+let themeMode = loadThemeMode();
+
+const colorSchemeQuery = window.matchMedia
+  ? window.matchMedia('(prefers-color-scheme: dark)')
+  : null;
+let prefersNight = colorSchemeQuery ? colorSchemeQuery.matches : false;
+
+if (colorSchemeQuery) {
+  const onSchemeChange = (event) => {
+    prefersNight = event.matches;
+    applyThemePreference();
+  };
+  if (colorSchemeQuery.addEventListener) {
+    colorSchemeQuery.addEventListener('change', onSchemeChange);
+  } else if (colorSchemeQuery.addListener) {
+    colorSchemeQuery.addListener(onSchemeChange);
+  }
+}
+
+function getNightPreference() {
+  if (themeMode === 'auto') {
+    return prefersNight;
+  }
+  return themeMode === 'night';
+}
+
+function applyThemePreference() {
+  const isNight = getNightPreference();
+  document.body.classList.toggle('theme-night', isNight);
+}
+
+function updateThemeToggle() {
+  const valueSpan = themeToggle.querySelector('.value');
+  valueSpan.textContent = getThemeLabel(themeMode);
+  themeToggle.setAttribute('aria-label', window.i18n.t('common.aria.appearanceLabel', { state: getThemeLabel(themeMode) }));
+  applyThemePreference();
+}
+
+function persistThemeMode() {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, themeMode);
+  } catch (error) {
+    console.warn('Unable to persist theme mode.', error);
+  }
+}
+
+themeToggle.addEventListener('click', () => {
+  const currentIndex = THEME_MODES.indexOf(themeMode);
+  const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % THEME_MODES.length;
+  themeMode = THEME_MODES[nextIndex];
+  persistThemeMode();
+  updateThemeToggle();
+});
+
+// Update theme toggle when language changes
+window.addEventListener('languagechange', updateThemeToggle);
+
+// Initial update (with fallback labels)
+updateThemeToggle();
+
+// Enable CSS theme interpolation only after the initial preference is applied,
+// so a stored dark preference does not animate on first paint.
+requestAnimationFrame(() => {
+  document.body.classList.add('theme-transition-ready');
+});
+
+// Update again once i18n is ready (with translated labels)
+if (window.i18n) {
+  window.i18n.onReady(updateThemeToggle);
+}
+
+
+
+// Keep in sync with --theme-transition-duration in styles.css.
+const THEME_FADE_DURATION = 900;
+let nightBlend = getNightPreference() ? 1.0 : 0.0;
+let nightFadeStart = null;
+let nightFadeFrom = nightBlend;
+let nightFadeTo = nightBlend;
+
+// Camera projection values are shared by the shader, pointer projection, and
+// DOM horizon tracking. Keeping one source of truth prevents the hero from
+// drifting away from the rendered horizon.
+const CAMERA_PROJECTION_DEPTH = 1.5;
+const BASE_CAMERA_TILT = 0.14;
+
+// 404 page camera animation
+const CAMERA_404_DURATION = 3000; // 3 seconds
+const CAMERA_404_Y_OFFSET = 1.0;  // Move camera up
+const CAMERA_404_Z_OFFSET = -8.0; // Move camera back (towards viewer)
+const CAMERA_404_TILT_OFFSET = -0.7; // Tilt camera down (radians)
+let camera404AnimStart = null;
+let camera404AnimFrom = { y: 0, z: 0, tilt: 0 };
+let camera404AnimTo = { y: 0, z: 0, tilt: 0 };
+let cameraYOffset = 0;
+let cameraZOffset = 0;
+let cameraTiltOffset = 0;
+
+function is404Page() {
+  const page = document.querySelector('.page');
+  return page && page.dataset.pageType === '404';
+}
+
+// Initialize target based on initial page state
+if (is404Page()) {
+  camera404AnimTo = { y: CAMERA_404_Y_OFFSET, z: CAMERA_404_Z_OFFSET, tilt: CAMERA_404_TILT_OFFSET };
+}
+
+function easeInOut(t) {
+  return t * t * (3.0 - 2.0 * t);
+}
+
+function check404PageState() {
+  const is404Now = is404Page();
+  const targetY = is404Now ? CAMERA_404_Y_OFFSET : 0;
+  const targetZ = is404Now ? CAMERA_404_Z_OFFSET : 0;
+  const targetTilt = is404Now ? CAMERA_404_TILT_OFFSET : 0;
+  
+  // If target changed, start new animation from current position
+  if (camera404AnimTo.y !== targetY || camera404AnimTo.z !== targetZ || camera404AnimTo.tilt !== targetTilt) {
+    camera404AnimFrom = { y: cameraYOffset, z: cameraZOffset, tilt: cameraTiltOffset };
+    camera404AnimTo = { y: targetY, z: targetZ, tilt: targetTilt };
+    camera404AnimStart = null; // Will be set on next render frame
+  }
+}
+
+function updateCamera404(time) {
+  // Already at target
+  if (cameraYOffset === camera404AnimTo.y && cameraZOffset === camera404AnimTo.z && cameraTiltOffset === camera404AnimTo.tilt) {
+    return false;
+  }
+
+  if (camera404AnimStart === null) {
+    camera404AnimStart = time;
+  }
+
+  const elapsed = time - camera404AnimStart;
+  const progress = Math.min(elapsed / CAMERA_404_DURATION, 1);
+  const eased = easeInOut(progress);
+
+  cameraYOffset = camera404AnimFrom.y + (camera404AnimTo.y - camera404AnimFrom.y) * eased;
+  cameraZOffset = camera404AnimFrom.z + (camera404AnimTo.z - camera404AnimFrom.z) * eased;
+  cameraTiltOffset = camera404AnimFrom.tilt + (camera404AnimTo.tilt - camera404AnimFrom.tilt) * eased;
+  
+  // Snap to final values when done
+  if (progress >= 1) {
+    cameraYOffset = camera404AnimTo.y;
+    cameraZOffset = camera404AnimTo.z;
+    cameraTiltOffset = camera404AnimTo.tilt;
+  }
+
+  return true;
+}
+
+let lastSceneHorizonFromBottom = null;
+let sceneHorizonGeometry = null;
+let observedSceneHorizonHero = null;
+
+const sceneHorizonResizeObserver = typeof ResizeObserver === 'function'
+  ? new ResizeObserver(function() {
+      syncSceneHorizonPosition(true);
+    })
+  : null;
+
+if (sceneHorizonResizeObserver) {
+  sceneHorizonResizeObserver.observe(canvas);
+}
+
+function measureSceneHorizonGeometry() {
+  const hero = document.querySelector('.home-hero');
+
+  if (sceneHorizonResizeObserver && hero !== observedSceneHorizonHero) {
+    if (observedSceneHorizonHero) {
+      sceneHorizonResizeObserver.unobserve(observedSceneHorizonHero);
+    }
+    if (hero) {
+      sceneHorizonResizeObserver.observe(hero);
+    }
+    observedSceneHorizonHero = hero;
+  }
+
+  if (!hero) {
+    sceneHorizonGeometry = null;
+    return;
+  }
+
+  const canvasRect = canvas.getBoundingClientRect();
+  const heroRect = hero.getBoundingClientRect();
+  if (!canvasRect.height || !heroRect.height) {
+    sceneHorizonGeometry = null;
+    return;
+  }
+
+  sceneHorizonGeometry = {
+    canvasBottom: canvasRect.bottom,
+    canvasHeight: canvasRect.height,
+    heroBottom: heroRect.bottom
+  };
+}
+
+function syncSceneHorizonPosition(refreshGeometry) {
+  if (refreshGeometry || !sceneHorizonGeometry) {
+    measureSceneHorizonGeometry();
+  }
+  if (!sceneHorizonGeometry) return;
+
+  // getRay() changes from water to sky when its rotated Y component reaches
+  // zero. Solve that same projection here, then express the horizon relative
+  // to the hero's bottom edge for CSS bottom positioning.
+  const tilt = BASE_CAMERA_TILT + cameraTiltOffset;
+  const horizonFromCanvasBottomRatio =
+    (1 - CAMERA_PROJECTION_DEPTH * Math.tan(tilt)) / 2;
+  const horizonY = sceneHorizonGeometry.canvasBottom -
+    sceneHorizonGeometry.canvasHeight * horizonFromCanvasBottomRatio;
+  const horizonFromHeroBottom = sceneHorizonGeometry.heroBottom - horizonY;
+
+  if (lastSceneHorizonFromBottom === null ||
+      Math.abs(horizonFromHeroBottom - lastSceneHorizonFromBottom) >= 0.1) {
+    document.documentElement.style.setProperty(
+      '--scene-horizon-from-bottom',
+      horizonFromHeroBottom.toFixed(2) + 'px'
+    );
+    lastSceneHorizonFromBottom = horizonFromHeroBottom;
+  }
+}
+
+// Re-measure after HTMX replaces the page; if the camera is transitioning
+// back from the 404 scene, render() updates only the projection value per frame.
+document.body.addEventListener('htmx:afterSettle', function() {
+  check404PageState();
+  requestAnimationFrame(function() {
+    syncSceneHorizonPosition(true);
+  });
+});
+
+function updateNightBlend(time) {
+  const desired = getNightPreference() ? 1.0 : 0.0;
+  if (desired !== nightFadeTo) {
+    nightFadeFrom = nightBlend;
+    nightFadeTo = desired;
+    nightFadeStart = time;
+  }
+
+  if (nightFadeStart !== null) {
+    const progress = Math.min((time - nightFadeStart) / THEME_FADE_DURATION, 1);
+    const eased = easeInOut(progress);
+    nightBlend = nightFadeFrom + (nightFadeTo - nightFadeFrom) * eased;
+    if (progress >= 1) {
+      nightFadeStart = null;
+      nightBlend = nightFadeTo;
+    }
+  } else {
+    nightBlend = nightFadeTo;
+  }
+
+  return nightBlend;
+}
+
+const vertexShaderSource = `
+  attribute vec2 position;
+  void main() {
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+`;
+
+const LOGO_FADE_DELAY = 150;
+const LOGO_FADE_DURATION = 900;
+const LOGO_FADE_TARGET = 0.85;
+
+// based on afl_ext's ocean weaves shader (MIT licensed)
+
+// The wave octaves never change, so their directions, frequencies, speeds and
+// weights are baked into unrolled GLSL. The original loop recomputed sin, cos
+// and normalize for every octave of every raymarch step and normal sample.
+const WAVE_OCTAVES = 16;
+const WAVE_DRAG = 0.38;
+const WAVE_SWELL_BIAS = 0.35;
+// Mean of exp(sin(x) - 1) over one period (I0(1) / e). Octaves that are too
+// fine for a pixel fade towards this value so filtering keeps sea level put.
+const WAVE_OCTAVE_MEAN = 0.4657596075936404;
+// An octave fades out while the pixel footprint grows from WAVE_FADE_START to
+// WAVE_FADE_END of its wavelength. Sub-pixel waves otherwise alias into
+// shimmering speckle near the horizon, and skipping them saves most of the
+// work for distant samples.
+const WAVE_FADE_START = 0.2;
+const WAVE_FADE_END = 0.6;
+
+const WAVE_OCTAVE_PARAMS = (function() {
+  const swellLength = Math.hypot(-0.25, 1.0);
+  const swellX = -0.25 / swellLength;
+  const swellY = 1.0 / swellLength;
+  const octaves = [];
+  let iter = 0;
+  let frequency = 1.0;
+  let timeMultiplier = 2.0;
+  let weight = 1.0;
+  for (let i = 0; i < WAVE_OCTAVES; i++) {
+    const s = Math.sin(iter);
+    const c = Math.cos(iter);
+    let dx = s + (swellX - s) * WAVE_SWELL_BIAS;
+    let dy = c + (swellY - c) * WAVE_SWELL_BIAS;
+    const len = Math.hypot(dx, dy);
+    dx /= len;
+    dy /= len;
+    octaves.push({ dx, dy, frequency, timeMultiplier, weight });
+    weight *= 0.8;
+    frequency *= 1.18;
+    timeMultiplier *= 1.07;
+    // The shader used to accumulate this angle in 32-bit floats.
+    iter = Math.fround(iter + Math.fround(1232.399963));
+  }
+  return octaves;
+})();
+
+function glslFloat(value) {
+  const text = String(Number(value.toPrecision(9)));
+  return /[.eE]/.test(text) ? text : text + '.0';
+}
+
+// Emits `float name(vec2 p, float footprint)`, the height of the wave field
+// filtered for a sample covering `footprint` world units. Octaves are nested
+// so a sample stops as soon as the next (finer) octave is fully filtered.
+function buildWaveFunction(name, octaveCount) {
+  const octaves = WAVE_OCTAVE_PARAMS.slice(0, octaveCount);
+  const totalWeight = octaves.reduce((sum, o) => sum + o.weight, 0);
+  let body = '';
+  let indent = '    ';
+  octaves.forEach((o) => {
+    const wavelength = 2 * Math.PI / o.frequency;
+    const limit = WAVE_FADE_END * wavelength;
+    const fadeScale = 1 / ((WAVE_FADE_END - WAVE_FADE_START) * wavelength);
+    const g = glslFloat;
+    body += `${indent}if (footprint < ${g(limit)}) {\n`;
+    indent += '  ';
+    body += `${indent}f = min((${g(limit)} - footprint) * ${g(fadeScale)}, 1.0) * ${g(o.weight)};\n`;
+    body += `${indent}x = dot(p, vec2(${g(o.dx * o.frequency)}, ${g(o.dy * o.frequency)})) + t * ${g(o.timeMultiplier)} + shift;\n`;
+    body += `${indent}e = exp(sin(x) - 1.0);\n`;
+    body += `${indent}sum += (e - ${g(WAVE_OCTAVE_MEAN)}) * f;\n`;
+    body += `${indent}p -= vec2(${g(o.dx * WAVE_DRAG)}, ${g(o.dy * WAVE_DRAG)}) * (e * cos(x) * f);\n`;
+  });
+  for (let i = 0; i < octaves.length; i++) {
+    indent = indent.slice(2);
+    body += `${indent}}\n`;
+  }
+  return `
+  float ${name}(vec2 p, float footprint) {
+    float t = u_waveTime;
+    float shift = length(p) * 0.1;
+    float sum = 0.0;
+    float f, x, e;
+${body}
+    return ${glslFloat(WAVE_OCTAVE_MEAN)} + sum * ${glslFloat(1 / totalWeight)} + swell(p);
+  }
+`;
+}
+
+function buildFragmentShader(quality) {
+  const settings = QUALITY_SETTINGS[quality];
+  return `
+  precision highp float;
+  uniform vec2 iResolution;
+  uniform float iTime;
+  uniform float u_waveTime;
+  uniform float u_grainTime;
+  uniform float u_noiseScale;
+  uniform sampler2D u_logo;
+  uniform vec2 u_logoCenter;
+  uniform vec2 u_logoSize;
+  uniform float u_logoFade;
+  uniform vec4 u_ripples[10]; // (worldX, worldZ, birthTime, amplitude)
+  uniform int u_rippleCount;
+  uniform float u_night;
+  uniform float u_cameraYOffset;
+  uniform float u_cameraZOffset;
+  uniform float u_cameraTiltOffset;
+
+  // afl_ext 2017-2024
+  // MIT License
+  #define PI 3.14159265359
+
+  #define WATER_DEPTH 1.0
+  // Highest and lowest possible surface: waves span [-1, 0], the swell adds
+  // +-0.35 and ripples a little more on top.
+  #define WATER_TOP 0.6
+  #define WATER_BOTTOM -1.4
+  #define MAX_DISTANCE 400.0
+  #define CAMERA_HEIGHT 1.5
+  #define RAYMARCH_STEPS ${settings.raymarchSteps}
+  #define RAYMARCH_REFINE_STEPS 1
+  #define LOGO_INTENSITY 3.5
+  #define NIGHT_EPS 0.001
+  #define NIGHT_HORIZON_GLOW vec3(0.04, 0.044, 0.056)
+  // Stars seen in the water show up as single-pixel glitter, keep it subtle.
+  #define REFLECTED_STARS 0.6
+
+  float hash21(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+
+  vec2 cameraTilt() {
+    float angle = ${BASE_CAMERA_TILT} + u_cameraTiltOffset;
+    return vec2(cos(angle), sin(angle));
+  }
+
+  vec2 dirToScreenUV(vec3 dir) {
+    // Inverse of the camera tilt applied in getRay().
+    vec2 cs = cameraTilt();
+    vec3 unrotated = vec3(dir.x, cs.x * dir.y - cs.y * dir.z, cs.y * dir.y + cs.x * dir.z);
+    if (unrotated.z <= 0.0) return vec2(-1.0);
+    vec2 uv = (unrotated.xy / unrotated.z) * ${CAMERA_PROJECTION_DEPTH};
+    vec2 ndc = uv / vec2(iResolution.x / iResolution.y, 1.0);
+    return ndc * 0.5 + 0.5;
+  }
+
+  float star(vec2 screenUv, vec2 cellId, vec2 grid) {
+    float rnd = hash21(cellId);
+    if (rnd > 0.8) return 0.0;
+    vec2 starPos = vec2(hash21(cellId + 0.1), hash21(cellId + 0.2));
+    vec2 starUv = (cellId + starPos) / grid;
+    vec2 deltaPx = (screenUv - starUv) * iResolution.xy;
+    float sizePx = 0.25 + hash21(cellId + 0.3) * 0.45;
+    float d = length(deltaPx);
+    if (d >= sizePx) return 0.0;
+    float core = smoothstep(sizePx, sizePx * 0.2, d);
+    float flickerPhase = hash21(cellId + 0.4) * 6.28318;
+    float flickerSpeed = 0.2 + hash21(cellId + 0.5) * 0.3;
+    float flickerAmount = mix(0.1, 0.35, hash21(cellId + 0.7));
+    float flicker = mix(1.0 - flickerAmount, 1.0 + flickerAmount, 0.5 + 0.5 * sin(iTime * flickerSpeed + flickerPhase));
+    float lumens = mix(1.0, 12.0, hash21(cellId + 0.6));
+    float brightness = mix(0.6, 1.4, lumens / 12.0);
+    return core * flicker * brightness;
+  }
+
+  float swell(vec2 p) {
+    // Long, slow swell centered around 0 so it lifts and lowers the surface
+    // near the camera.
+    vec2 swellDir = vec2(-0.242535625, 0.9701425);
+    float swellPhase = dot(p, swellDir) * 0.18 - u_waveTime * 0.08;
+    vec2 cameraPos = vec2(u_waveTime * 0.2, 1.0);
+    float swellFade = smoothstep(28.0, 4.0, length(p - cameraPos));
+    return sin(swellPhase) * swellFade * 0.35;
+  }
+
+${buildWaveFunction('wavesMarch', settings.waveIterRaymarch)}
+${buildWaveFunction('wavesDetail', settings.waveIterNormal)}
+
+  float getripples(vec2 position) {
+    float rippleSum = 0.0;
+    for (int i = 0; i < 10; i++) {
+      if (i >= u_rippleCount) break;
+      vec4 ripple = u_ripples[i];
+      vec2 ripplePos = ripple.xy;
+      float birthTime = ripple.z;
+      float amplitude = ripple.w;
+
+      float age = u_waveTime - birthTime;
+      if (age < 0.0 || age > 12.0) continue;
+
+      float dist = length(position - ripplePos);
+      float frequency = 4.0;
+      float speed = 3.2;
+      float decay = 0.45;
+      float spatialDecay = 0.16;
+
+      // Circular wave propagating outward with decay
+      float phase = dist * frequency - age * speed;
+      float envelope = exp(-decay * age) * exp(-dist * spatialDecay);
+      // Smooth start to avoid pop-in
+      float fadeIn = smoothstep(0.0, 0.3, age);
+      rippleSum += amplitude * envelope * fadeIn * sin(phase);
+    }
+    return rippleSum;
+  }
+
+  float marchHeight(vec2 p, float footprint) {
+    return (wavesMarch(p, footprint) + getripples(p)) * WATER_DEPTH - WATER_DEPTH;
+  }
+
+  float detailHeight(vec2 p, float footprint) {
+    return (wavesDetail(p, footprint) + getripples(p)) * WATER_DEPTH;
+  }
+
+  // Marches between the planes bounding the surface. Steps follow the
+  // vertical gap like afl_ext's original, but lengthen as the ray flattens
+  // out: grazing rays otherwise exhaust their steps long before reaching the
+  // surface. Overshooting is fine because the crossing is then refined with
+  // a regula falsi step, which also removes stair-stepping.
+  float raymarchwater(vec3 origin, vec3 ray, float tNear, float tFar, float lodScale) {
+    float stepScale = 1.0 / (0.25 - ray.y);
+    float t = tNear;
+    float a = tNear;
+    float gapA = 0.0;
+    float gapB = 0.0;
+    for (int i = 0; i < RAYMARCH_STEPS; i++) {
+      vec3 p = origin + ray * t;
+      float gap = p.y - marchHeight(p.xz, t * lodScale);
+      if (gap < 0.0) {
+        gapB = gap;
+        break;
+      }
+      // Close enough once the remaining error, projected along the ray, is
+      // a fraction of the pixel's footprint on the water.
+      if (gap < 0.25 * t * lodScale * -ray.y) {
+        return t;
+      }
+      a = t;
+      gapA = gap;
+      t += gap * stepScale;
+      if (t >= tFar) {
+        return tFar;
+      }
+    }
+    if (gapB >= 0.0) {
+      return t;
+    }
+    float b = t;
+    for (int i = 0; i < RAYMARCH_REFINE_STEPS; i++) {
+      float m = mix(a, b, gapA / (gapA - gapB));
+      vec3 p = origin + ray * m;
+      float gap = p.y - marchHeight(p.xz, m * lodScale);
+      if (gap < 0.0) {
+        b = m;
+        gapB = gap;
+      } else {
+        a = m;
+        gapA = gap;
+      }
+    }
+    return mix(a, b, gapA / (gapA - gapB));
+  }
+
+  vec3 normal(vec2 pos, float e, float footprint) {
+    float H = detailHeight(pos, footprint);
+    float hx = detailHeight(pos - vec2(e, 0.0), footprint);
+    float hz = detailHeight(pos + vec2(0.0, e), footprint);
+    return normalize(vec3(hx - H, e, H - hz));
+  }
+
+  vec3 getRay(vec2 fragCoord) {
+    vec2 uv = ((fragCoord.xy / iResolution.xy) * 2.0 - 1.0) * vec2(iResolution.x / iResolution.y, 1.0);
+    vec3 proj = normalize(vec3(uv.x, uv.y, ${CAMERA_PROJECTION_DEPTH}));
+    // Fixed camera angle tilted up to show more sky. u_cameraTiltOffset adds
+    // additional tilt (negative = look down more).
+    vec2 cs = cameraTilt();
+    return vec3(proj.x, cs.x * proj.y + cs.y * proj.z, cs.x * proj.z - cs.y * proj.y);
+  }
+
+  vec3 extra_cheap_atmosphere(vec3 raydir, vec3 sundir) {
+    float special_trick = 1.0 / (raydir.y * 1.0 + 0.1);
+    float special_trick2 = 1.0 / (sundir.y * 11.0 + 1.0);
+    float raysundt = pow(abs(dot(sundir, raydir)), 2.0);
+    float sundt = pow(max(0.0, dot(sundir, raydir)), 8.0);
+    float mymie = sundt * special_trick * 0.2;
+    vec3 suncolor = mix(vec3(1.0), max(vec3(0.0), vec3(1.0) - vec3(5.5, 13.0, 22.4) / 22.4), special_trick2);
+    vec3 bluesky= vec3(12.0, 12.0, 13.0) / 22.4 * suncolor;
+    vec3 bluesky2 = max(vec3(0.0), bluesky - vec3(12.0, 12.0, 13.0) * 0.002 * (special_trick + -6.0 * sundir.y * sundir.y));
+    bluesky2 *= special_trick * (0.24 + raysundt * 0.24);
+    return bluesky2 * (1.0 + 1.0 * pow(1.0 - raydir.y, 3.0));
+  }
+
+  vec3 getSunDirection() {
+    // Static sun position (no movement)
+    return normalize(vec3(-0.0773502691896258, 0.6, 0.5773502691896258));
+  }
+
+  vec3 getAtmosphere(vec3 dir) {
+     return extra_cheap_atmosphere(dir, getSunDirection()) * 0.5;
+  }
+
+  vec2 skyUV(vec3 dir) {
+    float u = atan(dir.z, dir.x) / (2.0 * PI) + 0.5;
+    float v = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
+    return vec2(u, v);
+  }
+
+  vec3 getDaySky(vec3 dir) {
+    return getAtmosphere(dir);
+  }
+
+  vec3 getNightSky(vec3 dir, float starAmount) {
+    vec3 topColor = vec3(0.015, 0.02, 0.04);
+    vec3 bottomColor = vec3(0.03, 0.035, 0.05);
+    vec3 color = mix(bottomColor, topColor, clamp(dir.y * 0.5 + 0.5, 0.0, 1.0));
+    // Faint glow along the horizon. Wave faces pick it up in their
+    // reflections, which is what makes the swell readable at night.
+    color += NIGHT_HORIZON_GLOW * exp(-max(dir.y, 0.0) * 9.0);
+
+    vec2 screenUv = dirToScreenUV(dir);
+    if (screenUv.x >= 0.0 && screenUv.x <= 1.0 && screenUv.y > 0.35 && screenUv.y <= 1.0) {
+      // Stars are under a pixel wide and never reach a neighbouring cell, so
+      // only the cell containing this pixel needs to be evaluated.
+      vec2 grid = vec2(40.0, 30.0);
+      vec2 cell = floor(screenUv * grid);
+      float s = star(screenUv, cell, grid);
+      float horizonFade = smoothstep(0.35, 0.55, screenUv.y);
+      vec3 starColor = vec3(1.0, 0.97, 0.9);
+      color += starColor * (s * horizonFade * starAmount);
+    }
+
+    return color;
+  }
+
+  vec3 getSky(vec3 dir, float starAmount) {
+    if (u_night <= NIGHT_EPS) {
+      return getDaySky(dir);
+    }
+    if (u_night >= 1.0 - NIGHT_EPS) {
+      return getNightSky(dir, starAmount);
+    }
+    float horizonFactor = smoothstep(0.02, 0.25, dir.y);
+    float nightBlend = pow(u_night, mix(0.35, 1.0, horizonFactor));
+    return mix(getDaySky(dir), getNightSky(dir, starAmount), nightBlend);
+  }
+
+  float sampleLogo(vec2 uv) {
+    vec2 local = (uv - u_logoCenter) / u_logoSize + 0.5;
+    float inside = step(0.0, local.x) * step(local.x, 1.0) * step(0.0, local.y) * step(local.y, 1.0);
+    float alpha = texture2D(u_logo, local).a * inside;
+    return alpha * u_logoFade;
+  }
+
+  vec3 aces_tonemap(vec3 color) {
+    mat3 m1 = mat3(
+      0.59719, 0.07600, 0.02840,
+      0.35458, 0.90834, 0.13383,
+      0.04823, 0.01566, 0.83777
+    );
+    mat3 m2 = mat3(
+      1.60475, -0.10208, -0.00327,
+      -0.53108,  1.10813, -0.07276,
+      -0.07367, -0.00605,  1.07602
+    );
+    vec3 v = m1 * color;
+    vec3 a = v * (v + 0.0245786) - 0.000090537;
+    vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081;
+    return pow(clamp(m2 * (a / b), 0.0, 1.0), vec3(1.0 / 2.2));
+  }
+
+  // Film grain based on Martin Upitis's shader. Keeping this in the ocean
+  // pass avoids materializing and sampling a full-screen intermediate texture.
+  float gaussian(float z, float u, float o) {
+    return (1.0 / (o * sqrt(2.0 * 3.1415))) * exp(-(((z - u) * (z - u)) / (2.0 * (o * o))));
+  }
+
+  vec4 applyFilmGrain(vec3 color, vec2 fragCoord) {
+    float gray = dot(color, vec3(0.299, 0.587, 0.114));
+    vec2 uv = fragCoord * u_noiseScale / iResolution;
+    float seed = dot(uv, vec2(12.9898, 78.233));
+    float noise = fract(sin(seed) * 43758.5453 + u_grainTime * 1.5);
+    float variance = mix(0.75, 0.6, u_night);
+    noise = gaussian(noise, 0.0, variance * variance);
+
+    float grainIntensity = mix(0.4, 0.065, u_night);
+    gray += noise * (1.0 - gray) * grainIntensity;
+    gray = clamp(gray, 0.0, 1.0);
+
+    vec3 dark = mix(vec3(0.62), vec3(0.05), u_night);
+    vec3 light = mix(vec3(0.97), vec3(1.0), u_night);
+    return vec4(mix(dark, light, gray), 1.0);
+  }
+
+  void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+    vec3 ray = getRay(fragCoord);
+    if(ray.y >= 0.0) {
+      fragColor = vec4(aces_tonemap(getSky(ray, 1.0) * 2.0), 1.0);
+      return;
+    }
+
+    vec3 origin = vec3(u_waveTime * 0.2, CAMERA_HEIGHT + u_cameraYOffset, 1.0 + u_cameraZOffset);
+    float tNear = (origin.y - WATER_TOP) / -ray.y;
+    float tFar = min((origin.y - WATER_BOTTOM) / -ray.y, MAX_DISTANCE);
+
+    // World-space size of this pixel on the water. Rays that graze the
+    // surface see a stretched footprint, which is what makes distant waves
+    // alias; widen it accordingly so their fine octaves are filtered out.
+    float pixelAngle = 2.0 / (${CAMERA_PROJECTION_DEPTH} * iResolution.y);
+    float lodScale = pixelAngle * inversesqrt(max(-ray.y, 0.01));
+
+    float dist = tNear < tFar ? raymarchwater(origin, ray, tNear, tFar, lodScale) : tFar;
+    vec3 waterHitPos = origin + ray * dist;
+    float footprint = dist * lodScale;
+
+    // Fine octaves are already filtered by footprint, so distant normals only
+    // need gentle flattening to stay calm instead of washing out to a plane.
+    float distanceBlend = min(1.0, sqrt(dist * 0.01) * 1.1);
+    vec3 N = normal(waterHitPos.xz, max(0.01, dist * pixelAngle), footprint);
+    N = normalize(mix(N, vec3(0.0, 1.0, 0.0), 0.45 * distanceBlend));
+
+    float fresnelSharp = 0.04 + 0.96 * pow(1.0 - max(0.0, dot(-N, ray)), 5.0);
+    // At distance, converge Fresnel to the smooth flat-normal value to kill speckle
+    float fresnelFlat = 0.04 + 0.96 * pow(1.0 - max(0.0, -ray.y), 5.0);
+    float fresnel = mix(fresnelSharp, fresnelFlat, 0.5 * distanceBlend);
+
+    vec3 R = reflect(ray, N);
+    R.y = abs(R.y);
+
+    vec3 reflection = getSky(R, REFLECTED_STARS);
+    reflection += vec3(sampleLogo(skyUV(R)) * LOGO_INTENSITY);
+    vec3 scatteringBase = mix(vec3(0.08, 0.08, 0.09), vec3(0.02, 0.02, 0.03), u_night);
+    vec3 scattering = scatteringBase * (0.2 + (waterHitPos.y + WATER_DEPTH) / WATER_DEPTH);
+
+    vec3 C = fresnel * reflection + scattering;
+
+    // Add distance fog
+    // At night the fog matches the sky right at the horizon so the two meet
+    // without a seam.
+    vec3 fogColor = mix(vec3(0.55, 0.55, 0.58), vec3(0.03, 0.035, 0.05) + NIGHT_HORIZON_GLOW, u_night);
+    float fogAmount = 1.0 - exp(-dist * 0.02);
+    C = mix(C, fogColor, fogAmount);
+
+    // Darken waves in light mode
+    float waveBrightness = mix(1.4, 1.9, u_night);
+    fragColor = vec4(aces_tonemap(C * waveBrightness), 1.0);
+  }
+
+  void main() {
+    vec4 sceneColor;
+    mainImage(sceneColor, gl_FragCoord.xy);
+    gl_FragColor = applyFilmGrain(sceneColor.rgb, gl_FragCoord.xy);
+  }
+`;
+}
+
+let fragmentShaderSource = buildFragmentShader(currentQuality);
+
+function createShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+  return shader;
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+  const program = gl.createProgram();
+  gl.attachShader(program, vertexShader);
+  gl.attachShader(program, fragmentShader);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error(gl.getProgramInfoLog(program));
+    gl.deleteProgram(program);
+    return null;
+  }
+  return program;
+}
+
+// Logo fade-in animation (skip if not on home page)
+function revealPage() {
+  if (document.body.classList.contains('skip-intro')) {
+    // Non-home page: show immediately
+    document.body.classList.add('loaded');
+  } else {
+    // Home page: fade in
+    setTimeout(() => {
+      const fadeDuration = LOGO_FADE_DURATION / 1000;
+      logo.style.transition = `opacity ${fadeDuration}s ease`;
+      logo.style.opacity = `${LOGO_FADE_TARGET}`;
+      const logoLinks = document.querySelector('.logo-links');
+      if (logoLinks) {
+        logoLinks.style.transition = `opacity ${fadeDuration}s ease`;
+        logoLinks.style.opacity = `${LOGO_FADE_TARGET}`;
+      }
+      // Mark body as loaded so HTMX swaps don't restart animation
+      setTimeout(() => {
+        document.body.classList.add('loaded');
+      }, fadeDuration * 1000);
+    }, LOGO_FADE_DELAY);
+  }
+}
+
+// Without WebGL (unsupported, turned off, or blocked by the browser, as
+// Chrome does after GPU trouble) there is no ocean, but the page still has
+// to fade in.
+if (!gl) {
+  revealPage();
+  return;
+}
+
+// Ocean wave program
+const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+let oceanFragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+let program = createProgram(gl, vertexShader, oceanFragmentShader);
+
+const positionBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1, -1, 1, -1, -1, 1,
+  -1, 1, 1, -1, 1, 1
+]), gl.STATIC_DRAW);
+
+let positionLocation = gl.getAttribLocation(program, 'position');
+let resolutionLocation = gl.getUniformLocation(program, 'iResolution');
+let timeLocation = gl.getUniformLocation(program, 'iTime');
+let waveTimeLocation = gl.getUniformLocation(program, 'u_waveTime');
+let grainTimeLocation = gl.getUniformLocation(program, 'u_grainTime');
+let noiseScaleLocation = gl.getUniformLocation(program, 'u_noiseScale');
+let logoTextureLocation = gl.getUniformLocation(program, 'u_logo');
+let logoCenterLocation = gl.getUniformLocation(program, 'u_logoCenter');
+let logoSizeLocation = gl.getUniformLocation(program, 'u_logoSize');
+let logoFadeLocation = gl.getUniformLocation(program, 'u_logoFade');
+let ripplesLocation = gl.getUniformLocation(program, 'u_ripples');
+let rippleCountLocation = gl.getUniformLocation(program, 'u_rippleCount');
+let nightLocation = gl.getUniformLocation(program, 'u_night');
+let cameraYOffsetLocation = gl.getUniformLocation(program, 'u_cameraYOffset');
+let cameraZOffsetLocation = gl.getUniformLocation(program, 'u_cameraZOffset');
+let cameraTiltOffsetLocation = gl.getUniformLocation(program, 'u_cameraTiltOffset');
+
+function rebuildOceanProgram() {
+  fragmentShaderSource = buildFragmentShader(currentQuality);
+  if (oceanFragmentShader) gl.deleteShader(oceanFragmentShader);
+  if (program) gl.deleteProgram(program);
+  
+  oceanFragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+  program = createProgram(gl, vertexShader, oceanFragmentShader);
+  
+  positionLocation = gl.getAttribLocation(program, 'position');
+  resolutionLocation = gl.getUniformLocation(program, 'iResolution');
+  timeLocation = gl.getUniformLocation(program, 'iTime');
+  waveTimeLocation = gl.getUniformLocation(program, 'u_waveTime');
+  grainTimeLocation = gl.getUniformLocation(program, 'u_grainTime');
+  noiseScaleLocation = gl.getUniformLocation(program, 'u_noiseScale');
+  logoTextureLocation = gl.getUniformLocation(program, 'u_logo');
+  logoCenterLocation = gl.getUniformLocation(program, 'u_logoCenter');
+  logoSizeLocation = gl.getUniformLocation(program, 'u_logoSize');
+  logoFadeLocation = gl.getUniformLocation(program, 'u_logoFade');
+  ripplesLocation = gl.getUniformLocation(program, 'u_ripples');
+  rippleCountLocation = gl.getUniformLocation(program, 'u_rippleCount');
+  nightLocation = gl.getUniformLocation(program, 'u_night');
+  cameraYOffsetLocation = gl.getUniformLocation(program, 'u_cameraYOffset');
+  cameraZOffsetLocation = gl.getUniformLocation(program, 'u_cameraZOffset');
+  cameraTiltOffsetLocation = gl.getUniformLocation(program, 'u_cameraTiltOffset');
+}
+
+function setQuality(quality) {
+  if (!QUALITY_LEVELS.includes(quality) || quality === currentQuality) return;
+  currentQuality = quality;
+  rebuildOceanProgram();
+  resize();
+  lastQualityChangeTime = performance.now();
+}
+
+function updateAutoQuality(time, fps) {
+  // Add FPS sample with timestamp
+  autoQualityFpsHistory.push({ time, fps });
+
+  // Remove old samples outside the window
+  const cutoff = time - AUTO_QUALITY_SAMPLE_TIME;
+  while (autoQualityFpsHistory.length > 0 && autoQualityFpsHistory[0].time < cutoff) {
+    autoQualityFpsHistory.shift();
+  }
+
+  // Need enough samples before making decisions
+  if (autoQualityFpsHistory.length < 3) return;
+
+  // Check cooldown
+  if (time - lastQualityChangeTime < AUTO_QUALITY_COOLDOWN) return;
+
+  // Calculate average FPS
+  const avgFps = autoQualityFpsHistory.reduce((sum, s) => sum + s.fps, 0) / autoQualityFpsHistory.length;
+  const currentIndex = QUALITY_LEVELS.indexOf(currentQuality);
+
+  if (avgFps < AUTO_QUALITY_FPS_LOW && currentIndex > 0) {
+    // FPS too low, reduce quality
+    setQuality(QUALITY_LEVELS[currentIndex - 1]);
+    autoQualityFpsHistory = []; // Reset history after change
+  } else if (avgFps > AUTO_QUALITY_FPS_HIGH && currentIndex < QUALITY_LEVELS.length - 1) {
+    // FPS high enough, try increasing quality
+    setQuality(QUALITY_LEVELS[currentIndex + 1]);
+    autoQualityFpsHistory = []; // Reset history after change
+  }
+}
+
+const logoCenter = [0.53, 0.72];
+let logoSize = [0.18, 0.18 / 1.32];
+let logoFadeStart = null;
+const logoTexture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, logoTexture);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+function setupLogoTexture() {
+  const img = new Image();
+  img.onload = () => {
+    const logoAspect = img.naturalWidth && img.naturalHeight
+      ? img.naturalWidth / img.naturalHeight
+      : 1.32;
+    const baseSize = 0.18;
+    logoSize = [baseSize, baseSize / logoAspect];
+
+    const width = 512;
+    const height = Math.max(1, Math.round(width / logoAspect));
+    const logoCanvas = document.createElement('canvas');
+    logoCanvas.width = width;
+    logoCanvas.height = height;
+    const ctx = logoCanvas.getContext('2d');
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+    gl.bindTexture(gl.TEXTURE_2D, logoTexture);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, logoCanvas);
+    updateLogoPlacement();
+  };
+
+  img.onerror = () => {
+    console.warn('Unable to load logo SVG for texture.');
+  };
+
+  img.src = LOGO_SVG_URL;
+}
+
+function resize() {
+  // Use the canvas's CSS layout size (set by 100vw × 100dvh in CSS),
+  // which remains stable during pinch/browser zoom.
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (!width || !height) return;
+  // Render at reduced resolution based on quality setting
+  // Use higher scale on low DPI screens for sharper rendering
+  const isLowDpi = window.devicePixelRatio < LOW_DPI_THRESHOLD;
+  const settings = QUALITY_SETTINGS[currentQuality];
+  const qualityScale = isLowDpi ? settings.lowDpiScale : settings.scale;
+  const resolutionScale = contentPageResolutionReduced
+    ? CONTENT_PAGE_RESOLUTION_SCALE
+    : 1.0;
+  const scale = qualityScale * resolutionScale;
+  canvas.width = Math.round(width * window.devicePixelRatio * scale);
+  canvas.height = Math.round(height * window.devicePixelRatio * scale);
+  updateLogoPlacement();
+  syncSceneHorizonPosition(true);
+}
+
+window.addEventListener('resize', resize);
+resize();
+setupLogoTexture();
+// Recalculate logo reflection placement once the logo image has its intrinsic dimensions
+if (logo.complete) {
+  updateLogoPlacement();
+} else {
+  logo.addEventListener('load', updateLogoPlacement);
+}
+
+// FPS tracking
+let frameCount = 0;
+let lastFpsUpdate = 0;
+
+// Separate accumulated clocks let the motion preference change at runtime
+// without jumping to a different point in either animation. Playback speed
+// eases between modes so leaving a content page does not abruptly accelerate
+// the ocean.
+let waveTime = 0;
+let grainTime = 0;
+let lastAmbientMotionTime = null;
+let ambientMotionIsReduced = null;
+let ambientSpeedTransitionElapsed = AMBIENT_MOTION_SPEED_TRANSITION_DURATION;
+let waveSpeed = 1.0;
+let grainSpeed = 1.0;
+let waveSpeedFrom = waveSpeed;
+let grainSpeedFrom = grainSpeed;
+let waveSpeedTo = waveSpeed;
+let grainSpeedTo = grainSpeed;
+let contentFrameRateCapActive = false;
+let nextContentRenderTime = null;
+
+function updateAmbientMotionClocks(time, contentPage) {
+  const reduced = shouldReduceAmbientMotion(contentPage);
+
+  if (lastAmbientMotionTime === null) {
+    waveTime = time * 0.001;
+    grainTime = time * 0.001;
+    waveSpeed = reduced ? REDUCED_MOTION_WAVE_SPEED : 1.0;
+    grainSpeed = reduced ? REDUCED_MOTION_GRAIN_SPEED : 1.0;
+    waveSpeedFrom = waveSpeedTo = waveSpeed;
+    grainSpeedFrom = grainSpeedTo = grainSpeed;
+    ambientMotionIsReduced = reduced;
+    lastAmbientMotionTime = time;
+    return;
+  }
+
+  const delta = Math.max(0, (time - lastAmbientMotionTime) * 0.001);
+  if (reduced !== ambientMotionIsReduced) {
+    ambientMotionIsReduced = reduced;
+    ambientSpeedTransitionElapsed = 0;
+    waveSpeedFrom = waveSpeed;
+    grainSpeedFrom = grainSpeed;
+    waveSpeedTo = reduced ? REDUCED_MOTION_WAVE_SPEED : 1.0;
+    grainSpeedTo = reduced ? REDUCED_MOTION_GRAIN_SPEED : 1.0;
+  }
+
+  if (ambientSpeedTransitionElapsed < AMBIENT_MOTION_SPEED_TRANSITION_DURATION) {
+    ambientSpeedTransitionElapsed = Math.min(
+      ambientSpeedTransitionElapsed + delta,
+      AMBIENT_MOTION_SPEED_TRANSITION_DURATION
+    );
+    const progress = ambientSpeedTransitionElapsed / AMBIENT_MOTION_SPEED_TRANSITION_DURATION;
+    const eased = easeInOut(progress);
+    waveSpeed = waveSpeedFrom + (waveSpeedTo - waveSpeedFrom) * eased;
+    grainSpeed = grainSpeedFrom + (grainSpeedTo - grainSpeedFrom) * eased;
+  } else {
+    waveSpeed = waveSpeedTo;
+    grainSpeed = grainSpeedTo;
+  }
+
+  waveTime += delta * waveSpeed;
+  grainTime += delta * grainSpeed;
+  lastAmbientMotionTime = time;
+}
+
+// Keep the transition smooth at the display's native refresh rate and full
+// resolution, then reduce GPU work once a content page has settled into its
+// slower ambient motion.
+function shouldRenderAmbientFrame(time, contentPage) {
+  const shouldReduceContentResources = contentPage &&
+    ambientMotionIsReduced &&
+    ambientSpeedTransitionElapsed >= AMBIENT_MOTION_SPEED_TRANSITION_DURATION;
+
+  if (contentPageResolutionReduced !== shouldReduceContentResources) {
+    contentPageResolutionReduced = shouldReduceContentResources;
+    resize();
+  }
+
+  if (!shouldReduceContentResources) {
+    contentFrameRateCapActive = false;
+    nextContentRenderTime = null;
+    return true;
+  }
+
+  if (!contentFrameRateCapActive || nextContentRenderTime === null) {
+    contentFrameRateCapActive = true;
+    nextContentRenderTime = time + CONTENT_PAGE_RENDER_INTERVAL;
+    return true;
+  }
+
+  // Allow a small tolerance for requestAnimationFrame timestamp rounding.
+  if (time + 0.5 < nextContentRenderTime) return false;
+
+  const elapsedIntervals = Math.floor(
+    (time + 0.5 - nextContentRenderTime) / CONTENT_PAGE_RENDER_INTERVAL
+  ) + 1;
+  nextContentRenderTime += elapsedIntervals * CONTENT_PAGE_RENDER_INTERVAL;
+  return true;
+}
+
+// Ripple system
+const MAX_RIPPLES = 10;
+const RIPPLE_LIFETIME = 12;
+const ripples = []; // Array of {x, z, time, amplitude}
+const rippleUniformData = new Float32Array(MAX_RIPPLES * 4);
+
+function screenToWaterHit(clientX, clientY, time) {
+  const rect = canvas.getBoundingClientRect();
+  const ndcX = (clientX - rect.left) / rect.width * 2 - 1;
+  const ndcY = -((clientY - rect.top) / rect.height * 2 - 1);
+  
+  const aspect = canvas.width / canvas.height;
+  let rayX = ndcX * aspect;
+  let rayY = ndcY;
+  let rayZ = CAMERA_PROJECTION_DEPTH;
+  const len = Math.hypot(rayX, rayY, rayZ);
+  rayX /= len; rayY /= len; rayZ /= len;
+  
+  // Apply camera tilt around the X axis (matches the GLSL shader):
+  // newY = cos(a)*y + sin(a)*z
+  // newZ = -sin(a)*y + cos(a)*z
+  const tiltAngle = BASE_CAMERA_TILT + cameraTiltOffset;
+  const cosTilt = Math.cos(tiltAngle);
+  const sinTilt = Math.sin(tiltAngle);
+  const newY = rayY * cosTilt + rayZ * sinTilt;
+  const newZ = -rayY * sinTilt + rayZ * cosTilt;
+  rayY = newY;
+  rayZ = newZ;
+  
+  // Camera position (matches shader, including offsets)
+  const camX = time * 0.2;
+  const camY = 1.5 + cameraYOffset; // CAMERA_HEIGHT + offset
+  const camZ = 1.0 + cameraZOffset;
+  
+  // Intersect with y=0 plane
+  if (rayY >= 0) return null; // Looking up, no water hit
+  
+  const t = -camY / rayY;
+  return { x: camX + rayX * t, z: camZ + rayZ * t };
+}
+
+function addRipple(worldX, worldZ, time, amplitude = 0.22) {
+  ripples.push({ x: worldX, z: worldZ, time: time, amplitude: amplitude });
+  if (ripples.length > MAX_RIPPLES) {
+    ripples.shift();
+  }
+}
+
+function getRippleUniforms(time) {
+  // Expired ripples used to remain in the shader's dynamic loop forever.
+  // Birth times are ordered, so pruning is cheap and keeps the common idle
+  // path at zero iterations. Reuse the upload buffer to avoid per-frame GC.
+  while (ripples.length && time - ripples[0].time > RIPPLE_LIFETIME) {
+    ripples.shift();
+  }
+
+  for (let i = 0; i < ripples.length; i++) {
+    const r = ripples[i];
+    rippleUniformData[i * 4 + 0] = r.x;
+    rippleUniformData[i * 4 + 1] = r.z;
+    rippleUniformData[i * 4 + 2] = r.time;
+    rippleUniformData[i * 4 + 3] = r.amplitude;
+  }
+  return rippleUniformData;
+}
+
+function wrapUVDelta(a, b) {
+  let d = a - b;
+  if (d > 0.5) d -= 1.0;
+  if (d < -0.5) d += 1.0;
+  return d;
+}
+
+function screenPosToSkyUV(screenX, screenY, aspect) {
+  const uvX = screenX * 2 - 1;
+  const uvY = screenY * 2 - 1;
+  const projX = uvX * aspect;
+  const projY = uvY;
+  const projZ = CAMERA_PROJECTION_DEPTH;
+
+  const projLen = Math.hypot(projX, projY, projZ);
+  let rayX = projX / projLen;
+  let rayY = projY / projLen;
+  let rayZ = projZ / projLen;
+
+  // Apply camera tilt around the X axis (matches the GLSL shader)
+  const tiltAngle = BASE_CAMERA_TILT + cameraTiltOffset;
+  const cosTilt = Math.cos(tiltAngle);
+  const sinTilt = Math.sin(tiltAngle);
+  const rotatedY = rayY * cosTilt + rayZ * sinTilt;
+  const rotatedZ = -rayY * sinTilt + rayZ * cosTilt;
+  rayY = rotatedY;
+  rayZ = rotatedZ;
+
+  if (rayY < 0) return null;
+
+  const u = ((Math.atan2(rayZ, rayX) / (2 * Math.PI)) + 0.5) % 1;
+  const v = Math.min(1, Math.max(0, rayY * 0.5 + 0.5));
+  return { u, v };
+}
+
+function updateLogoPlacement() {
+  if (!logo) return;
+  const canvasRect = canvas.getBoundingClientRect();
+  const logoRect = logo.getBoundingClientRect();
+  if (!canvasRect.width || !canvasRect.height) return;
+  // Skip if logo hasn't loaded yet (height unknown)
+  if (!logoRect.height) return;
+
+  const centerX = (logoRect.left + logoRect.width / 2 - canvasRect.left) / canvasRect.width;
+  const centerY = 1 - (logoRect.top + logoRect.height / 2 - canvasRect.top) / canvasRect.height;
+  const aspect = canvas.width / canvas.height;
+  const centerUV = screenPosToSkyUV(centerX, centerY, aspect);
+  if (!centerUV) return;
+
+  const halfWidth = (logoRect.width / 2) / canvasRect.width;
+  const halfHeight = (logoRect.height / 2) / canvasRect.height;
+  const leftUV = screenPosToSkyUV(centerX - halfWidth, centerY, aspect);
+  const rightUV = screenPosToSkyUV(centerX + halfWidth, centerY, aspect);
+  const upUV = screenPosToSkyUV(centerX, centerY + halfHeight, aspect);
+  const downUV = screenPosToSkyUV(centerX, centerY - halfHeight, aspect);
+
+  let sizeU = logoSize[0];
+  let sizeV = logoSize[1];
+
+  if (leftUV && rightUV) {
+    sizeU = Math.abs(wrapUVDelta(rightUV.u, leftUV.u));
+  }
+  if (upUV && downUV) {
+    sizeV = Math.abs(upUV.v - downUV.v);
+  }
+
+  logoCenter[0] = centerUV.u;
+  logoCenter[1] = centerUV.v;
+  logoSize[0] = sizeU;
+  logoSize[1] = sizeV;
+}
+
+// Ripple on click
+canvas.addEventListener('click', (e) => {
+  const hit = screenToWaterHit(e.clientX, e.clientY, waveTime);
+  if (hit) {
+    addRipple(hit.x, hit.z, waveTime, 0.18);
+  }
+});
+
+// Mark shader as ready after first successful frame
+let shaderReady = false;
+function markShaderReady() {
+  if (!shaderReady && program) {
+    shaderReady = true;
+    canvas.classList.add('shader-ready');
+  }
+}
+
+function render(time) {
+  const contentPage = isContentPage();
+  updateAmbientMotionClocks(time, contentPage);
+
+  if (!shouldRenderAmbientFrame(time, contentPage)) {
+    requestAnimationFrame(render);
+    return;
+  }
+
+  // Measure FPS for adaptive quality. Ignore the intentional content-page cap
+  // so it is not mistaken for a performance problem.
+  if (contentFrameRateCapActive) {
+    frameCount = 0;
+    lastFpsUpdate = time;
+  } else {
+    frameCount++;
+    if (time - lastFpsUpdate >= 1000) {
+      const fps = frameCount;
+
+      // Update auto quality based on measured FPS
+      updateAutoQuality(time, fps);
+
+      frameCount = 0;
+      lastFpsUpdate = time;
+    }
+  }
+
+  if (logoFadeStart === null) {
+    logoFadeStart = time + LOGO_FADE_DELAY;
+  }
+  const logoProgress = Math.min(Math.max((time - logoFadeStart) / LOGO_FADE_DURATION, 0), 1);
+  const logoFade = logoProgress * LOGO_FADE_TARGET;
+  const nightValue = updateNightBlend(time);
+  const cameraChanged = updateCamera404(time);
+  if (cameraChanged && sceneHorizonGeometry) {
+    syncSceneHorizonPosition(false);
+  }
+
+  // Render the ocean and film grain directly to the canvas. The former
+  // three-pass pipeline performed two redundant full-screen draws and forced
+  // a tile-store/texture-load round trip on mobile and Apple GPUs.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.useProgram(program);
+  gl.enableVertexAttribArray(positionLocation);
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+  gl.uniform1f(timeLocation, time * 0.001);
+  gl.uniform1f(waveTimeLocation, waveTime);
+  gl.uniform1f(grainTimeLocation, grainTime);
+  const noiseScale = window.devicePixelRatio < LOW_DPI_THRESHOLD ? LOW_DPI_NOISE_SCALE : 1.0;
+  gl.uniform1f(noiseScaleLocation, noiseScale);
+  gl.uniform2f(logoCenterLocation, logoCenter[0], logoCenter[1]);
+  gl.uniform2f(logoSizeLocation, logoSize[0], logoSize[1]);
+  gl.uniform1f(logoFadeLocation, logoFade);
+  gl.uniform1f(nightLocation, nightValue);
+  gl.uniform1f(cameraYOffsetLocation, cameraYOffset);
+  gl.uniform1f(cameraZOffsetLocation, cameraZOffset);
+  gl.uniform1f(cameraTiltOffsetLocation, cameraTiltOffset);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, logoTexture);
+  gl.uniform1i(logoTextureLocation, 0);
+
+  gl.uniform4fv(ripplesLocation, getRippleUniforms(waveTime));
+  gl.uniform1i(rippleCountLocation, ripples.length);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  markShaderReady();
+  requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
+
+revealPage();
+
+})();

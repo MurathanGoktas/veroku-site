@@ -1,0 +1,6 @@
+# Removed Earendil material; kept locally, never published.
+earendil-arsiv/
+
+.DS_Store
+.claude/
+__pycache__/

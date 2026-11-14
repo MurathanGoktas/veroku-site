@@ -1,0 +1,54 @@
+# Ghisa-Verioku
+
+The Veroku website (veroku.net). It started as a static copy of https://earendil.com (mirrored 2026-11-02); the theme is still theirs, credited in the black banner at the bottom of every page.
+
+## Run locally
+
+All asset and page links are root-relative (`/static/...`), so serve `site/` as the web root rather than opening the HTML files directly:
+
+```bash
+python3 serve.py
+```
+
+Then open http://localhost:8000. `serve.py` serves `site/` with `Cache-Control: no-store`, so a normal reload always shows the latest edits (including the `locales/*.json` text). Pass a port to use another one: `python3 serve.py 8080`.
+
+## Layout
+
+```
+site/
+  index.html                 home (slogan)
+  purpose/                   Mission page (nav label "Mission" / "Misyon")
+  values/                    Values and Operating Principles
+  404.html                   not-found page
+  CNAME                      GitHub Pages domain (veroku.net)
+  locales/<lang>/*.json      i18n strings (27 languages x common, errors, content), loaded by static/i18n.js
+  static/
+    styles.css               all styles, including the credit banner at the end
+    script.js                ocean canvas background, menu, theme toggle
+    i18n.js                  translation loader
+    htmx-bundle.min.js       page transitions (hx-boost swaps div.page)
+    purify.min.js            DOMPurify, sanitizes translated HTML
+    veroku-mark.svg          placeholder logo (a tall V); also drawn by the canvas
+    favicon/                 placeholder favicons drawn from the same V
+    fonts/                   Departure Mono and Commit Mono (both free, OFL)
+earendil-arsiv/              everything removed before publishing (not part of the site)
+```
+
+## Text
+
+Our own text is English in the HTML and in `locales/en/`, Turkish in `locales/tr/`; other languages fall back to English for it:
+- Home slogan: `home.tagline` in `common.json`
+- Values: `values.list.*`, Operating Principles: `values.principles.*` (headings `values.heading.main` / `values.heading.ops`) in `content.json`
+- Mission: `mission.*` in `content.json`
+
+The page `<meta>` descriptions are the Turkish slogan for every language.
+
+## Removed before publishing
+
+Moved to `earendil-arsiv/` with their original paths: Earendil's posts and feeds, the Join and Subscribe pages, post media, KaTeX, the asciinema player, `prose.css`, the Earendil logo and favicons, the Plantin font (licensed to Earendil), and the posts/subscribe locale files. Links to those pages, Earendil's external project links, the newsletter form code and unused Earendil text in the locale files are gone. The serif text now uses Georgia.
+
+## Still to do
+
+- The theme (styles, scripts, ocean canvas) is Earendil's; their site repo has no license, so ask them for permission or replace it over time.
+- Replace the placeholder V logo and favicons with the real logo.
+- The 404 message ("It was lost, and has not been seen again.") is still Earendil's wording.
