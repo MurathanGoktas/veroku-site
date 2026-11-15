@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site metinleri · Veroku</title>
+<link rel="icon" href="/static/favicon/square.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --text: #22211f; --muted: #6d6a64; --line: #e2dfd8;
+    --field: #fbfaf8; --accent: #474f7c; --accent-text: #ffffff; --ok: #2f7a4b; --warn: #a3620e; --bad: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1a; --card: #242423; --text: #ecebe8; --muted: #a29f98; --line: #3a3936;
+      --field: #1f1f1e; --accent: #9aa3d6; --accent-text: #15161f; --ok: #6cc28c; --warn: #e2a54a; --bad: #f08a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1040px; margin: 0 auto; padding: 12px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .bar h1 { font-size: 17px; font-weight: 600; margin: 0; }
+  .bar .sub { color: var(--muted); font-size: 13px; }
+  .bar .spacer { flex: 1; }
+  .bar a { color: var(--accent); font-size: 14px; text-decoration: none; }
+  .bar a:hover { text-decoration: underline; }
+  #status { font-size: 13px; color: var(--muted); min-width: 9em; text-align: right; }
+  #status.dirty { color: var(--warn); }
+  #status.error { color: var(--bad); }
+  button { font: inherit; cursor: pointer; border-radius: 8px; }
+  .primary { background: var(--accent); color: var(--accent-text); border: 0; padding: 7px 16px; font-weight: 600; }
+  .primary:disabled { opacity: 0.5; cursor: default; }
+  .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 2px 9px; font-size: 13px; }
+  .ghost:hover { color: var(--text); border-color: var(--muted); }
+  .ghost.danger:hover { color: var(--bad); border-color: var(--bad); }
+  main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 80px; }
+  .note { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 20px; }
+  section > h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px 14px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 3px; }
+  label .count { float: right; font-variant-numeric: tabular-nums; }
+  label .count.in { color: var(--ok); }
+  label .count.out { color: var(--warn); }
+  input, textarea { width: 100%; font: inherit; color: var(--text); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+  textarea { resize: none; overflow: hidden; min-height: 2.4em; line-height: 1.45; }
+  .heading input { font-weight: 600; }
+  .item { border-top: 1px solid var(--line); padding: 14px 0 6px; margin-top: 14px; }
+  .item-head { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; }
+  .item-head .num { font-weight: 600; font-size: 13px; color: var(--muted); margin-inline-end: auto; }
+  .desc { margin-top: 8px; }
+  .add { margin-top: 14px; background: transparent; border: 1px dashed var(--line); color: var(--muted); width: 100%; padding: 8px; }
+  .add:hover { color: var(--text); border-color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div>
+      <h1>Site metinleri</h1>
+      <div class="sub">Misyon ve Değerler · sadece bu bilgisayarda</div>
+    </div>
+    <span class="spacer"></span>
+    <a href="/purpose/" target="_blank">Misyon sayfası ↗</a>
+    <a href="/values/" target="_blank">Değerler sayfası ↗</a>
+    <span id="status">Yükleniyor…</span>
+    <button id="save" class="primary" type="button" disabled>Kaydet</button>
+  </div>
+</header>
+<main>
+  <p class="note">Her maddenin açıklaması, sitede maddeye tıklanınca açılır. Açıklama Türkçede 30–40, İngilizcede 30–45 kelime olsun (sayaç yeşilse aralıkta). Açıklamayı boş bırakırsan madde tıklanamaz olur. Kaydettikten sonra sayfayı yenileyince değişiklik görünür; veroku.net'e gitmesi için Claude'a "yayınla" de.</p>
+  <div id="sections"></div>
+</main>
+<script>
+  const SECTIONS = [
+    ["mission", "Misyonumuz"],
+    ["values", "Değerlerimiz"],
+    ["principles", "Operasyon Prensiplerimiz"],
+  ];
+  let data = null;
+  let dirty = false;
+  const pending = [];  // counters and heights to set once the fields are on the page
+  const $ = (sel, el = document) => el.querySelector(sel);
+  const statusEl = $("#status"), saveBtn = $("#save");
+
+  function setStatus(text, cls = "") { statusEl.textContent = text; statusEl.className = cls; }
+  function markDirty() { dirty = true; saveBtn.disabled = false; setStatus("Kaydedilmedi", "dirty"); }
+  function words(text) { return text.trim() ? text.trim().split(/\s+/).length : 0; }
+  function autosize(t) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+  function newId() { return "item" + Date.now().toString(36); }
+
+  function field(labelText, value, onInput, { multiline = true, counted = false, range = [30, 40] } = {}) {
+    const wrap = document.createElement("div");
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    const count = document.createElement("span");
+    count.className = "count";
+    if (counted) label.appendChild(count);
+    const input = document.createElement(multiline ? "textarea" : "input");
+    input.value = value || "";
+    if (multiline) input.rows = 1;
+    const update = () => {
+      if (counted) {
+        const n = words(input.value);
+        count.textContent = n + " kelime";
+        count.className = "count " + (n === 0 ? "" : n >= range[0] && n <= range[1] ? "in" : "out");
+      }
+      if (multiline) autosize(input);
+    };
+    input.addEventListener("input", () => { onInput(input.value); update(); markDirty(); });
+    wrap.append(label, input);
+    pending.push(update);
+    return wrap;
+  }
+
+  function render() {
+    const root = $("#sections");
+    root.innerHTML = "";
+    for (const [key, title] of SECTIONS) {
+      const sec = data[key];
+      const el = document.createElement("section");
+      el.innerHTML = `<h2>${title}</h2>`;
+      const heading = document.createElement("div");
+      heading.className = "pair heading";
+      heading.append(
+        field("Başlık (Türkçe)", sec.heading.tr, v => sec.heading.tr = v, { multiline: false }),
+        field("Başlık (İngilizce)", sec.heading.en, v => sec.heading.en = v, { multiline: false }),
+      );
+      el.appendChild(heading);
+
+      sec.items.forEach((item, i) => {
+        const box = document.createElement("div");
+        box.className = "item";
+        const head = document.createElement("div");
+        head.className = "item-head";
+        head.innerHTML = `<span class="num">Madde ${i + 1}</span>`;
+        const mk = (text, title, fn, extra = "") => {
+          const b = document.createElement("button");
+          b.type = "button"; b.className = "ghost " + extra; b.textContent = text; b.title = title;
+          b.addEventListener("click", fn);
+          head.appendChild(b);
+        };
+        if (i > 0) mk("↑", "Yukarı taşı", () => { [sec.items[i - 1], sec.items[i]] = [sec.items[i], sec.items[i - 1]]; markDirty(); render(); });
+        if (i < sec.items.length - 1) mk("↓", "Aşağı taşı", () => { [sec.items[i + 1], sec.items[i]] = [sec.items[i], sec.items[i + 1]]; markDirty(); render(); });
+        mk("Sil", "Bu maddeyi sil", () => {
+          if (confirm(`"${item.tr || item.en || "Bu madde"}" silinsin mi?`)) { sec.items.splice(i, 1); markDirty(); render(); }
+        }, "danger");
+        box.appendChild(head);
+
+        const text = document.createElement("div");
+        text.className = "pair";
+        text.append(
+          field("Madde (Türkçe)", item.tr, v => item.tr = v),
+          field("Madde (İngilizce)", item.en, v => item.en = v),
+        );
+        const desc = document.createElement("div");
+        desc.className = "pair desc";
+        desc.append(
+          field("Açıklama (Türkçe)", item.desc_tr, v => item.desc_tr = v, { counted: true }),
+          field("Açıklama (İngilizce)", item.desc_en, v => item.desc_en = v, { counted: true, range: [30, 45] }),
+        );
+        box.append(text, desc);
+        el.appendChild(box);
+      });
+
+      const add = document.createElement("button");
+      add.type = "button"; add.className = "add"; add.textContent = "+ Madde ekle";
+      add.addEventListener("click", () => {
+        sec.items.push({ id: newId(), tr: "", en: "", desc_tr: "", desc_en: "" });
+        markDirty(); render();
+        const section = document.querySelectorAll("#sections section")[SECTIONS.findIndex(s => s[0] === key)];
+        const boxes = section.querySelectorAll(".item");
+        const last = boxes[boxes.length - 1];
+        if (last) { last.scrollIntoView({ block: "center" }); last.querySelector("textarea").focus(); }
+      });
+      el.appendChild(add);
+      root.appendChild(el);
+    }
+    pending.splice(0).forEach(update => update());
+  }
+
+  async function load() {
+    try {
+      const res = await fetch("/_edit/api/text", { cache: "no-store" });
+      if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+      data = await res.json();
+      render();
+      setStatus("Kayıtlı");
+    } catch (err) {
+      setStatus("Yüklenemedi: " + err.message, "error");
+    }
+  }
+
+  async function save() {
+    if (!data) return;
+    saveBtn.disabled = true;
+    setStatus("Kaydediliyor…");
+    try {
+      const res = await fetch("/_edit/api/text", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+      });
+      const out = await res.json();
+      if (!res.ok) throw new Error(out.error || res.statusText);
+      dirty = false;
+      setStatus("Kaydedildi · " + new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }));
+    } catch (err) {
+      saveBtn.disabled = false;
+      setStatus("Kaydedilemedi: " + err.message, "error");
+    }
+  }
+
+  saveBtn.addEventListener("click", save);
+  document.addEventListener("keydown", e => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); if (dirty) save(); }
+  });
+  window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+  window.addEventListener("resize", () => document.querySelectorAll("textarea").forEach(autosize));
+  load();
+</script>
+</body>
+</html>

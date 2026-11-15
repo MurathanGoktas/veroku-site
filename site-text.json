@@ -1,0 +1,131 @@
+{
+  "mission": {
+    "heading": {
+      "tr": "Misyonumuz",
+      "en": "Our Mission"
+    },
+    "items": [
+      {
+        "id": "statement",
+        "tr": "İnsanı uyumda, dengede ve etkin tutmak.",
+        "en": "To keep people in harmony, in balance and in agency.",
+        "desc_tr": "Teknoloji hızla değişirken insanın merkezde kalmasını istiyoruz. Uyum insanın çevresiyle, denge işiyle ve diğer ilişkileriyle, etkinlik ise kendi kararlarını verebilme gücüyle ilgili.",
+        "desc_en": "As technology changes fast, we want people to stay at the center. Harmony concerns people and their surroundings, balance their work and other relationships, and agency their power to make their own decisions."
+      },
+      {
+        "id": "agency",
+        "tr": "İnsanın etkin olma gücünü keşfeder ve besleriz.",
+        "en": "We discover and nurture human agency.",
+        "desc_tr": "Yeniliklerle ortaya çıkan iş düzenini, yön verme gücünü insanda tutacak şekilde oluştururuz. Önce bu alanı keşfeder, sonra doğru araçlar ve alışkanlıklarla büyümesine alan açarız.",
+        "desc_en": "We shape the new ways of working that innovation brings so that the power to steer stays with people. First we discover this space, then we make room for it to grow with the right tools and habits."
+      },
+      {
+        "id": "support",
+        "tr": "İnsanların ve organizasyonların bilişsel otomasyon dönüşümlerini sağlıklı geçirmelerine destek oluruz.",
+        "en": "We help people and organizations go through their cognitive automation transformation in a healthy way.",
+        "desc_tr": "Bilişsel otomasyon işin yapılış biçimini kökten değiştiriyor. Bu dönüşümü bir teknoloji projesi olarak değil, insanların ve ekiplerin birlikte geçirdiği bir süreç olarak ele alır, kaygıyı azaltan ve öğrenmeyi hızlandıran adımlarla yanlarında oluruz.",
+        "desc_en": "Cognitive automation is reshaping how work gets done. We treat this shift not as a technology project but as a process people and teams go through together, and we stay beside them with steps that ease worry and speed up learning."
+      }
+    ]
+  },
+  "values": {
+    "heading": {
+      "tr": "Değerlerimiz",
+      "en": "Our Values"
+    },
+    "items": [
+      {
+        "id": "connected",
+        "tr": "Her şey her şeyle ilgilidir.",
+        "en": "Everything is connected to everything.",
+        "desc_tr": "Bariz veya gizli, yoğun veya zayıf olsa da her şeyin birbiriyle ilişkisi vardır. İşlerimizi, kararlarımızı ve hayatımızı bunun sorumluluğuyla ele alırız.",
+        "desc_en": "Whether obvious or hidden, strong or faint, everything is related to everything else. We approach our work, our decisions and our lives with the responsibility this brings."
+      },
+      {
+        "id": "smallMoves",
+        "tr": "Küçük hamleler büyük sonuçlar doğurur.",
+        "en": "Small moves lead to big results.",
+        "desc_tr": "Küçük de olsa doğru yönde atılan adımların karşılığının çok büyük olabileceği bilinciyle çalışırız. Küçük veya büyük demeden doğru olduğunu düşündüğümüz adımları atmanın sorumluluğunu hisseder ve yaratacağı sonucu bekleyip görmenin heyecanını yaşarız.",
+        "desc_en": "We work knowing that even small steps in the right direction can pay off enormously. Big or small, we feel responsible for taking the steps we believe are right, and we feel the excitement of waiting to see what they bring."
+      },
+      {
+        "id": "worth",
+        "tr": "İnsanın değerini ekonomik değerinden ayırırız.",
+        "en": "We separate a person's worth from their economic value.",
+        "desc_tr": "Bir insanın şirket ortamındaki değeri, yaptığı işler bilişsel otomasyonla yapıldıkça azalabilse de, yeni çalışma düzenini keşfederken bu yeni düzende insana saygı duyar, güvenir ve bu düzende onun yenilenen değerli konumunu keşfetmeyi çok önemseriz.",
+        "desc_en": "As cognitive automation takes over the work people do, their value inside a company may seem to shrink. While discovering the new way of working, we respect and trust people, and we care deeply about finding their renewed, valuable place in it."
+      },
+      {
+        "id": "tool",
+        "tr": "Teknoloji araçtır, araç teknolojidir.",
+        "en": "Technology is a tool, and a tool is technology.",
+        "desc_tr": "Teknolojiyi kendi başına bir amaç olarak görmeyiz; bir ihtiyaca hizmet ettiği ölçüde değerlidir. Öte yandan bir kalem, bir tablo ya da bir alışkanlık da teknolojidir, elektronik veya zeki olması gerekmez.",
+        "desc_en": "We don't see technology as a goal in itself; it is worth as much as the need it serves. At the same time, a pen, a spreadsheet or a habit is technology too: it doesn't have to be electronic or smart."
+      },
+      {
+        "id": "abundance",
+        "tr": "Bilişsel otomasyon bolluk üretir.",
+        "en": "Cognitive automation creates abundance.",
+        "desc_tr": "Rutin düşünme işlerini makinelere devrettiğimizde zaman, dikkat ve yaratıcılık açığa çıkar; insanlar asıl önemli olana odaklanabilir.",
+        "desc_en": "When routine thinking work is handed over to machines, time, attention and creativity are freed up, and people can focus on what really matters."
+      },
+      {
+        "id": "change",
+        "tr": "Değişim önlenemez ve yeni değildir.",
+        "en": "Change is inevitable, and it is not new.",
+        "desc_tr": "İnsanlık matbaadan elektriğe kadar pek çok büyük dönüşüm yaşadı; bilişsel otomasyon da bunlardan biri. Değişime direnmek yerine geçmişten öğrenir, onu sakin, meraklı ve hazırlıklı bir şekilde karşılar, getirdiği fırsatları birlikte değerlendiririz.",
+        "desc_en": "From the printing press to electricity, humanity has lived through many great transformations, and cognitive automation is one more. Rather than resisting change, we learn from the past, meet it calm, curious and prepared, and make the most of what it brings."
+      }
+    ]
+  },
+  "principles": {
+    "heading": {
+      "tr": "Operasyon Prensiplerimiz",
+      "en": "Our Operating Principles"
+    },
+    "items": [
+      {
+        "id": "mistakes",
+        "tr": "Hatadan korkmayız, hızlıca düzeltiriz.",
+        "en": "We are not afraid of mistakes; we fix them quickly.",
+        "desc_tr": "Hata yapmak, yeni bir şey denemenin ve öğrenmenin doğal bir parçasıdır. Hataları saklamak yerine açıkça konuşur, nedenlerini anlar ve hızlıca düzeltiriz. Böylece hem güven inşa eder hem de aynı hatanın tekrarlanmasının önüne geçeriz.",
+        "desc_en": "Making mistakes is a natural part of trying new things and learning. Instead of hiding them, we talk about them openly, understand why they happened and fix them fast. This builds trust and keeps the same mistake from happening again."
+      },
+      {
+        "id": "design",
+        "tr": "Özenle tasarlarız.",
+        "en": "We design with care.",
+        "desc_tr": "Her parçasını özenle seçtiğimiz, her parçasını özenle birbiriyle ilişkilendirdiğimiz estetik, harmonik ve ilham verici tasarımlar yaparız.",
+        "desc_en": "We create aesthetic, harmonious and inspiring designs in which every part is carefully chosen and carefully connected to every other."
+      },
+      {
+        "id": "beauty",
+        "tr": "Güzellik oluştururuz.",
+        "en": "We create beauty.",
+        "desc_tr": "Yaptığımız işin yalnızca çalışmasını değil, güzel olmasını da önemseriz. Özenli bir tasarım, açık bir metin ya da düzenli bir süreç, onu kullanan insana duyulan saygıdır ve işin kalitesini kendiliğinden yükseltir.",
+        "desc_en": "We care not only that our work works, but that it is beautiful. Careful design, clear writing and a tidy process are a form of respect for the people who use them, and they naturally raise the quality of the work."
+      },
+      {
+        "id": "ease",
+        "tr": "Kolaylık oluştururuz.",
+        "en": "We create ease.",
+        "desc_tr": "Karmaşık olanı basitleştirmek işimizin özüdür. Bir çözümün başarısını insanların hayatını ne kadar kolaylaştırdığıyla ölçeriz. Gereksiz adımları kaldırır, öğrenmesi ve kullanması kolay araçlar kurarız; böylece enerji gerçekten değer katan işlere kalır.",
+        "desc_en": "Making the complex simple is at the heart of what we do. We measure a solution by how much easier it makes people's lives, and we remove needless steps so that energy goes to work that truly adds value."
+      },
+      {
+        "id": "playful",
+        "tr": "Hayata geçirmeyi oyunbazca yaparız.",
+        "en": "Execution is done playfully.",
+        "desc_tr": "Ciddi işleri bile merakla, keyifle ve oyun tadında yapmayı seçeriz. Oyunbazlık denemeyi, keşfetmeyi ve yeni fikirlere açık olmayı kolaylaştırır; ekiplerin enerjisini ve motivasyonunu korur, en yaratıcı çözümlerin ortaya çıkmasına alan açar.",
+        "desc_en": "We choose to approach even serious work with curiosity and a sense of play. Playfulness makes it easier to experiment, explore and stay open to new ideas; it keeps teams energized and makes room for the most creative solutions."
+      },
+      {
+        "id": "people",
+        "tr": "Yöneten ve değerlendiren insandır.",
+        "en": "It is people who direct and evaluate.",
+        "desc_tr": "Otomasyon ne kadar gelişirse gelişsin, yönü belirleyen ve sonucu değerlendiren her zaman insandır. Makineler öneri sunar ve işi hızlandırır; son kararı verip sorumluluğunu üstlenen ise insanlardır. Kurduğumuz her sistemde insan denetimini ve şeffaflığı koruruz.",
+        "desc_en": "However advanced automation becomes, people always set the direction and judge the results. Machines suggest and speed up the work; people make the final call and own it. Every system we build keeps people in control and stays transparent."
+      }
+    ]
+  }
+}

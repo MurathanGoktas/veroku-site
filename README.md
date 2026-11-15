@@ -49,12 +49,15 @@ brand/                       logo files: veroku-logo.svg/.png (wordmark), veroku
 earendil-arsiv/              everything removed before publishing (not part of the site, gitignored)
 ```
 
+## Editing Mission and Values
+
+The Mission, Values and Operating Principles text lives in `site-text.json` (Turkish and English, each item with a short explanation that opens when the item is clicked on the site). Edit it in the browser at http://localhost:8000/_edit/ while `serve.py` runs: saving writes `site-text.json` and rebuilds the two pages and the `content.*` keys in `locales/en` and `locales/tr` (`sitetext.py`). The editor only answers on this computer and is not part of `site/`, so it is never published. Running `python3 sitetext.py` does the same rebuild from the file.
+
 ## Text
 
 Our own text is English in the HTML and in `locales/en/`, Turkish in `locales/tr/`; other languages fall back to English for it:
 - Home slogan: `home.tagline` in `common.json`
-- Values: `values.list.*`, Operating Principles: `values.principles.*` (headings `values.heading.main` / `values.heading.ops`) in `content.json`
-- Mission: `mission.*` in `content.json`
+- Mission, Values, Operating Principles: generated from `site-text.json` (see above) into `mission.*`, `values.list.*`, `values.principles.*` and the headings in `content.json`; explanations use the item key plus `.desc`
 
 The page `<meta>` descriptions are the Turkish slogan for every language.
 
