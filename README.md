@@ -18,10 +18,12 @@ GitHub Pages serves the `gh-pages` branch of [MurathanGoktas/veroku-site](https:
 
 ```bash
 git push origin main
-git push origin "$(git subtree split --prefix site)":gh-pages
+git push --force origin "$(git subtree split --prefix site)":gh-pages
 ```
 
-Pushes go through the MurathanGoktas GitHub account (`gh auth switch -u MurathanGoktas` if gh is on another account). DNS for veroku.net is at GoDaddy: four A records to GitHub Pages (185.199.108-111.153) and `www` as a CNAME to `murathangoktas.github.io`.
+`gh-pages` is generated from `site/`, so it is force-pushed: when the domain is changed in the GitHub Pages settings, GitHub commits its own `CNAME` edits to that branch, and the next push replaces them.
+
+Pushes go through the MurathanGoktas GitHub account (`gh auth switch -u MurathanGoktas` if gh is on another account). HTTPS is on (GitHub's certificate, renewed automatically). DNS for veroku.net is at GoDaddy: four A records to GitHub Pages (185.199.108-111.153) and `www` as a CNAME to `murathangoktas.github.io`.
 
 ## Layout
 
