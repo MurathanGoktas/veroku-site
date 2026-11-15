@@ -19,6 +19,18 @@
     "message": "Values",
     "context": "Navigation link to values page"
   },
+  "nav.projects": {
+    "message": "Projects",
+    "context": "Navigation link to projects page"
+  },
+  "nav.writing": {
+    "message": "Writing",
+    "context": "Navigation link to writing page (articles and posts)"
+  },
+  "nav.joinUs": {
+    "message": "Join Us",
+    "context": "Navigation link to join us page (careers)"
+  },
   "theme.auto": {
     "message": "AUTO",
     "context": "Theme toggle: automatic/system preference"
@@ -74,5 +86,17 @@
   "aria.values": {
     "message": "Veroku values",
     "context": "Aria-label for the values page"
+  },
+  "aria.projects": {
+    "message": "Veroku projects",
+    "context": "Aria-label for the projects page"
+  },
+  "aria.writing": {
+    "message": "Veroku writing",
+    "context": "Aria-label for the writing page"
+  },
+  "aria.join": {
+    "message": "Join Veroku",
+    "context": "Aria-label for the join us page"
   }
 }

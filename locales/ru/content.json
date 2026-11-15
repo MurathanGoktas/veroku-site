@@ -1,6 +1,9 @@
 {
+  "page.join.title": "Присоединяйтесь",
+  "page.projects.title": "Проекты",
   "page.purpose.title": "Цель",
   "page.values.title": "Ценности",
+  "page.writing.title": "Статьи",
   "values.heading.main": "Наши ценности",
   "values.heading.ops": "Принципы работы"
 }

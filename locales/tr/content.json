@@ -1,4 +1,6 @@
 {
+  "join.heading": "Bize Katıl",
+  "join.intro": "Değerlerimizi paylaşan insanlarla tanışmak isteriz. Açık pozisyonlarımızı ve bize nasıl ulaşabileceğini yakında burada paylaşacağız.",
   "mission.agency": "İnsanın etkin olma gücünü keşfeder ve besleriz.",
   "mission.agency.desc": "Yeniliklerle ortaya çıkan iş düzenini, yön verme gücünü insanda tutacak şekilde oluştururuz. Önce bu alanı keşfeder, sonra doğru araçlar ve alışkanlıklarla büyümesine alan açarız.",
   "mission.heading": "Misyonumuz",
@@ -6,8 +8,13 @@
   "mission.statement.desc": "Teknoloji hızla değişirken insanın merkezde kalmasını istiyoruz. Uyum insanın çevresiyle, denge işiyle ve diğer ilişkileriyle, etkinlik ise kendi kararlarını verebilme gücüyle ilgili.",
   "mission.support": "İnsanların ve organizasyonların bilişsel otomasyon dönüşümlerini sağlıklı geçirmelerine destek oluruz.",
   "mission.support.desc": "Bilişsel otomasyon işin yapılış biçimini kökten değiştiriyor. Bu dönüşümü bir teknoloji projesi olarak değil, insanların ve ekiplerin birlikte geçirdiği bir süreç olarak ele alır, kaygıyı azaltan ve öğrenmeyi hızlandıran adımlarla yanlarında oluruz.",
+  "page.join.title": "Bize Katıl",
+  "page.projects.title": "Projeler",
   "page.purpose.title": "Misyon",
   "page.values.title": "Değerler",
+  "page.writing.title": "Yazılar",
+  "projects.heading": "Projelerimiz",
+  "projects.soon": "Üzerinde çalıştığımız projeleri yakında burada paylaşacağız.",
   "values.heading.main": "Değerlerimiz",
   "values.heading.ops": "Operasyon Prensiplerimiz",
   "values.list.abundance": "Bilişsel otomasyon bolluk üretir.",
@@ -33,5 +40,7 @@
   "values.principles.people": "Yöneten ve değerlendiren insandır.",
   "values.principles.people.desc": "Otomasyon ne kadar gelişirse gelişsin, yönü belirleyen ve sonucu değerlendiren her zaman insandır. Makineler öneri sunar ve işi hızlandırır; son kararı verip sorumluluğunu üstlenen ise insanlardır. Kurduğumuz her sistemde insan denetimini ve şeffaflığı koruruz.",
   "values.principles.playful": "Hayata geçirmeyi oyunbazca yaparız.",
-  "values.principles.playful.desc": "Ciddi işleri bile merakla, keyifle ve oyun tadında yapmayı seçeriz. Oyunbazlık denemeyi, keşfetmeyi ve yeni fikirlere açık olmayı kolaylaştırır; ekiplerin enerjisini ve motivasyonunu korur, en yaratıcı çözümlerin ortaya çıkmasına alan açar."
+  "values.principles.playful.desc": "Ciddi işleri bile merakla, keyifle ve oyun tadında yapmayı seçeriz. Oyunbazlık denemeyi, keşfetmeyi ve yeni fikirlere açık olmayı kolaylaştırır; ekiplerin enerjisini ve motivasyonunu korur, en yaratıcı çözümlerin ortaya çıkmasına alan açar.",
+  "writing.heading": "Yazılarımız",
+  "writing.soon": "İlk yazılarımızı yakında burada paylaşacağız."
 }

@@ -2187,6 +2187,7 @@ body:not(.theme-night) .page--values .disclosure-summary::after {
   opacity: 0.78;
 }
 
-.page--purpose .letter-body .item-more {
+/* Paragraph pages (Mission, Projects, Writing, Join Us): space items like paragraphs. */
+.page--prose .letter-body > .item-more {
   margin: 0 0 1em;
 }

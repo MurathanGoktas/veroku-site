@@ -7,6 +7,18 @@
     "message": "Values",
     "context": "Page title for the values page shown in the browser tab and as the visually-hidden heading"
   },
+  "page.projects.title": {
+    "message": "Projects",
+    "context": "Page title for the projects page shown in the browser tab and as the visually-hidden heading"
+  },
+  "page.writing.title": {
+    "message": "Writing",
+    "context": "Page title for the writing page shown in the browser tab and as the visually-hidden heading"
+  },
+  "page.join.title": {
+    "message": "Join Us",
+    "context": "Page title for the join us page shown in the browser tab and as the visually-hidden heading"
+  },
   "values.heading.main": {
     "message": "Our Values",
     "context": "Values page main heading"
@@ -138,5 +150,29 @@
   "values.principles.people.desc": {
     "message": "However advanced automation becomes, people always set the direction and judge the results. Machines suggest and speed up the work; people make the final call and own it. Every system we build keeps people in control and stays transparent.",
     "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
+  },
+  "projects.heading": {
+    "message": "Our Projects",
+    "context": "Heading of the projects page"
+  },
+  "projects.soon": {
+    "message": "We'll share the projects we're working on here soon.",
+    "context": "Projects page paragraph"
+  },
+  "writing.heading": {
+    "message": "Our Writing",
+    "context": "Heading of the writing page"
+  },
+  "writing.soon": {
+    "message": "We'll share our first pieces here soon.",
+    "context": "Writing page paragraph"
+  },
+  "join.heading": {
+    "message": "Join Us",
+    "context": "Heading of the join us page"
+  },
+  "join.intro": {
+    "message": "We'd love to meet people who share our values. We'll share our open roles and how to reach us here soon.",
+    "context": "Join Us page paragraph"
   }
 }

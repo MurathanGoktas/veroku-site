@@ -1,6 +1,9 @@
 {
+  "page.join.title": "参加する",
+  "page.projects.title": "プロジェクト",
   "page.purpose.title": "目的",
   "page.values.title": "価値観",
+  "page.writing.title": "記事",
   "values.heading.main": "私たちの価値観",
   "values.heading.ops": "動作原理"
 }
