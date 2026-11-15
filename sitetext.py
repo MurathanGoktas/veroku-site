@@ -2,8 +2,12 @@
 
 site-text.json holds the text of those pages in Turkish and English: a heading and
 items, each item with an optional explanation that opens when the item is clicked.
-This writes it into the English and Turkish locale files and into the pages' HTML
-(English, so the pages read correctly before translations load).
+This writes it into the English and Turkish locale files and into the pages' HTML.
+
+The HTML of every page is written in the default language (Turkish), so pages read
+correctly before translations load and without JavaScript: localize_pages() fills
+each translated element with its Turkish text from locales/tr (English where a
+Turkish string is missing). i18n.js swaps in English when a visitor picks it.
 
 Usage: python3 sitetext.py      (serve.py's editor at /_edit/ also calls build())
 """
@@ -15,6 +19,7 @@ import re
 ROOT = pathlib.Path(__file__).resolve().parent
 SITE = ROOT / "site"
 TEXT = ROOT / "site-text.json"
+DEFAULT_LANG = "tr"  # language of the pages' HTML; must match DEFAULT_LANG in static/i18n.js
 
 # section -> (heading key, item key prefix, English context for items)
 SECTIONS = {
@@ -79,7 +84,9 @@ def esc(text):
 
 def item_html(key, item, block):
     """One item: plain if it has no explanation, otherwise a <details> that opens to it."""
-    text, desc = item["en"], clean(item.get("desc_en", "")) or clean(item.get("desc_tr", ""))
+    other = "en" if DEFAULT_LANG == "tr" else "tr"
+    text = item[DEFAULT_LANG]
+    desc = clean(item.get("desc_" + DEFAULT_LANG, "")) or clean(item.get("desc_" + other, ""))
     if not desc:
         return (f'<p data-i18n="content.{key}">{esc(text)}</p>' if block
                 else f'  <li data-i18n="content.{key}">{esc(text)}</li>')
@@ -139,17 +146,60 @@ def build(data=None):
     for name, page in PARAGRAPH_PAGES.items():
         heading_key, prefix, _ = SECTIONS[name]
         section = data[name]
-        body = heading_html(heading_key, section["heading"]["en"])
+        body = heading_html(heading_key, section["heading"][DEFAULT_LANG])
         body += "".join("\n" + item_html(prefix + i["id"], i, block=True) + "\n" for i in section["items"])
         replace_letter_body(SITE / page, body)
 
-    body = heading_html(SECTIONS["values"][0], data["values"]["heading"]["en"]) + "\n"
+    body = heading_html(SECTIONS["values"][0], data["values"]["heading"][DEFAULT_LANG]) + "\n"
     body += section_list(data, "values") + "\n"
-    body += heading_html(SECTIONS["principles"][0], data["principles"]["heading"]["en"], spaced=True) + "\n"
+    body += heading_html(SECTIONS["principles"][0], data["principles"]["heading"][DEFAULT_LANG], spaced=True) + "\n"
     body += section_list(data, "principles")
     replace_letter_body(SITE / "values/index.html", body)
+    localize_pages()
+
+
+def load_strings(lang):
+    """All strings of one language as {"namespace.key": text}."""
+    out = {}
+    for path in sorted((SITE / "locales" / lang).glob("*.json")):
+        for key, value in json.loads(path.read_text()).items():
+            out[path.stem + "." + key] = value["message"] if isinstance(value, dict) else value
+    return out
+
+
+def localize_pages():
+    """Write the default language into every page: text, aria-labels, titles, <html lang>."""
+    strings = {**load_strings("en"), **load_strings(DEFAULT_LANG)}
+    attr = lambda text: html.escape(text, quote=True)
+
+    def text_node(m):
+        value = strings.get(m.group(2))
+        return m.group(1) + (esc(value) if value else m.group(3))
+
+    def aria(m):
+        tag, value = m.group(0), strings.get(m.group(1))
+        return re.sub(r'aria-label="[^"]*"', lambda _: f'aria-label="{attr(value)}"', tag) if value else tag
+
+    for path in sorted(SITE.rglob("*.html")):
+        page = original = path.read_text()
+        page = re.sub(r'<html lang="[^"]*"', f'<html lang="{DEFAULT_LANG}"', page, count=1)
+        page = re.sub(r'(<[a-zA-Z][^>]*?\sdata-i18n="([^"]+)"[^>]*>)([^<]*)', text_node, page)
+        page = re.sub(r'<[a-zA-Z][^>]*?\sdata-i18n-aria="([^"]+)"[^>]*>', aria, page)
+        title = re.search(r'<title data-i18n-doc-title="([^"]+)" data-i18n-title-key="([^"]+)" '
+                          r'data-i18n-default-title="([^"]*)">[^<]*</title>', page)
+        if title:
+            name = strings.get(title.group(2)) or html.unescape(title.group(3))
+            full = strings.get(title.group(1), "{title} | Veroku").replace("{title}", name)
+            page = page.replace(title.group(0), f'<title data-i18n-doc-title="{title.group(1)}" '
+                                f'data-i18n-title-key="{title.group(2)}" data-i18n-default-title="{attr(name)}">'
+                                f'{esc(full)}</title>')
+            page = re.sub(r'(<meta (?:property="og:title"|name="twitter:title") content=")[^"]*"',
+                          lambda m: m.group(1) + attr(full) + '"', page)
+        page = re.sub(r'(<span class="lang-current">)[^<]*', lambda m: m.group(1) + DEFAULT_LANG.upper(), page)
+        if page != original:
+            path.write_text(page)
 
 
 if __name__ == "__main__":
     build()
-    print("Built Mission, Values, Projects, Writing and Join Us from site-text.json")
+    print("Built Mission, Values, Projects, Writing and Join Us from site-text.json; pages are in Turkish")

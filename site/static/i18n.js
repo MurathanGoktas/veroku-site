@@ -1,23 +1,20 @@
 /**
  * Lightweight i18n for static site.
  * Loads translations from /locales/{lang}/*.json
- * Uses browser language by default, falls back to English.
+ * Turkish and English only. Turkish is the default (the pages' HTML is Turkish);
+ * the visitor's choice is kept in a cookie. Missing strings fall back to English.
  */
 (function() {
   'use strict';
 
+  var DEFAULT_LANG = 'tr';
   var FALLBACK_LANG = 'en';
   var LANG_COOKIE = 'lang';
   var NAMESPACES = ['common', 'errors', 'content'];
-  var RTL_LANGUAGES = ['ar', 'he', 'fa'];
-  var SUPPORTED_LANGUAGES = [
-    'en', 'ar', 'bn', 'de', 'es', 'fa', 'fr', 'he', 'hi', 'id',
-    'it', 'ja', 'ko', 'ms', 'nl', 'no', 'pt', 'ru', 'sv', 'sw',
-    'ta', 'te', 'th', 'tr', 'uk', 'vi', 'zh'
-  ];
+  var SUPPORTED_LANGUAGES = ['tr', 'en'];
 
   var translations = {};
-  var currentLang = FALLBACK_LANG;
+  var currentLang = DEFAULT_LANG;
   var ready = false;
   var readyCallbacks = [];
   var dateFormatters = {};
@@ -104,10 +101,10 @@
     return Promise.all(promises);
   }
 
-  // Get language from cookie
+  // Get language from cookie (ignoring languages the site no longer offers)
   function getLangFromCookie() {
     var match = document.cookie.match(new RegExp('(?:^|;\\s*)' + LANG_COOKIE + '=([^;]*)'));
-    return match ? match[1] : null;
+    return match && SUPPORTED_LANGUAGES.indexOf(match[1]) !== -1 ? match[1] : null;
   }
 
   // Save language to cookie
@@ -115,22 +112,8 @@
     document.cookie = LANG_COOKIE + '=' + lang + ';path=/;max-age=' + (60 * 60 * 24 * 365);
   }
 
-  // Get browser language preference
-  function getBrowserLang() {
-    var langs = navigator.languages || [navigator.language];
-    for (var i = 0; i < langs.length; i++) {
-      var baseLang = langs[i].split('-')[0].toLowerCase();
-      if (SUPPORTED_LANGUAGES.indexOf(baseLang) !== -1) {
-        return baseLang;
-      }
-    }
-    return null;
-  }
-
-  // Apply RTL direction if needed
   function applyDirection(lang) {
-    var isRtl = RTL_LANGUAGES.indexOf(lang) !== -1;
-    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+    document.documentElement.dir = 'ltr';
     document.documentElement.lang = lang;
   }
 
@@ -289,8 +272,8 @@
 
   // Initialize
   function init() {
-    // Priority: cookie > browser > fallback
-    var lang = getLangFromCookie() || getBrowserLang() || FALLBACK_LANG;
+    // The visitor's earlier choice, otherwise Turkish.
+    var lang = getLangFromCookie() || DEFAULT_LANG;
     
     return loadLanguage(lang).then(function() {
       currentLang = lang;
@@ -315,64 +298,14 @@
 
   // Language names for the picker
   var LANGUAGE_NAMES = {
-    en: 'English',
-    ar: 'العربية',
-    bn: 'বাংলা',
-    de: 'Deutsch',
-    es: 'Español',
-    fa: 'فارسی',
-    fr: 'Français',
-    he: 'עברית',
-    hi: 'हिन्दी',
-    id: 'Bahasa Indonesia',
-    it: 'Italiano',
-    ja: '日本語',
-    ko: '한국어',
-    ms: 'Bahasa Melayu',
-    nl: 'Nederlands',
-    no: 'Norsk',
-    pt: 'Português',
-    ru: 'Русский',
-    sv: 'Svenska',
-    sw: 'Kiswahili',
-    ta: 'தமிழ்',
-    te: 'తెలుగు',
-    th: 'ไทย',
     tr: 'Türkçe',
-    uk: 'Українська',
-    vi: 'Tiếng Việt',
-    zh: '中文'
+    en: 'English'
   };
 
-  // Short native labels for the picker toggle (first 2 chars of native name)
+  // Short labels for the picker toggle
   var LANGUAGE_SHORT = {
-    en: 'EN',
-    ar: 'عر',
-    bn: 'বা',
-    de: 'DE',
-    es: 'ES',
-    fa: 'فا',
-    fr: 'FR',
-    he: 'עב',
-    hi: 'हि',
-    id: 'ID',
-    it: 'IT',
-    ja: '日本',
-    ko: '한국',
-    ms: 'MS',
-    nl: 'NL',
-    no: 'NO',
-    pt: 'PT',
-    ru: 'РУ',
-    sv: 'SV',
-    sw: 'SW',
-    ta: 'தமி',
-    te: 'తె',
-    th: 'ไท',
     tr: 'TR',
-    uk: 'УК',
-    vi: 'VI',
-    zh: '中文'
+    en: 'EN'
   };
 
   // Initialize language picker UI

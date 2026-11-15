@@ -37,7 +37,7 @@ site/
   join/                      Join Us (placeholder text for now)
   404.html                   not-found page
   CNAME                      GitHub Pages domain (veroku.net)
-  locales/<lang>/*.json      i18n strings (27 languages x common, errors, content), loaded by static/i18n.js
+  locales/tr|en/*.json       i18n strings (Turkish and English x common, errors, content), loaded by static/i18n.js
   static/
     styles.css               all styles, including the credit banner at the end
     script.js                ocean canvas background, menu, theme toggle
@@ -54,15 +54,15 @@ earendil-arsiv/              everything removed before publishing (not part of t
 
 ## Editing the page text
 
-The text of the Mission, Values (with Operating Principles), Projects, Writing and Join Us pages lives in `site-text.json` (Turkish and English, each item with a short explanation that opens when the item is clicked on the site). Edit it in the browser at http://localhost:8000/_edit/ while `serve.py` runs: saving writes `site-text.json` and rebuilds those pages and the `content.*` keys in `locales/en` and `locales/tr` (`sitetext.py`). The editor only answers on this computer and is not part of `site/`, so it is never published. Running `python3 sitetext.py` does the same rebuild from the file.
+The text of the Mission, Values (with Operating Principles), Projects, Writing and Join Us pages lives in `site-text.json` (Turkish and English, each item with a short explanation that opens when the item is clicked on the site). Edit it in the browser at http://localhost:8000/_edit/ while `serve.py` runs: saving writes `site-text.json` and rebuilds those pages and the `content.*` keys in `locales/en` and `locales/tr` (`sitetext.py`). The editor only answers on this computer and is not part of `site/`, so it is never published. Running `python3 sitetext.py` does the same rebuild from the file. Run it after editing anything in `locales/tr/` too, so the Turkish HTML picks it up (see Text).
 
 ## Text
 
-Our own text is English in the HTML and in `locales/en/`, Turkish in `locales/tr/`; other languages fall back to English for it:
+The site is Turkish and English only, Turkish by default (`DEFAULT_LANG` in `static/i18n.js` and `sitetext.py`); a visitor's choice is kept in the `lang` cookie. The pages' HTML is written in Turkish by `sitetext.py` from `locales/tr/`, so a page reads right before the translations load and without JavaScript; choosing English swaps in `locales/en/`. Strings missing in Turkish fall back to English. Where our text lives:
 - Home slogan: `home.tagline` in `common.json`
 - Mission, Values, Operating Principles, Projects, Writing, Join Us: generated from `site-text.json` (see above) into `mission.*`, `values.list.*`, `values.principles.*`, `projects.*`, `writing.*`, `join.*` and the headings in `content.json`; explanations use the item key plus `.desc`
 
-The page `<meta>` descriptions are the Turkish slogan for every language.
+The page `<meta>` descriptions are the Turkish slogan. The other 25 languages of the original theme were removed (they are in the git history).
 
 ## Removed before publishing
 
