@@ -60,17 +60,20 @@
   <div class="bar">
     <div>
       <h1>Site metinleri</h1>
-      <div class="sub">Misyon ve Değerler · sadece bu bilgisayarda</div>
+      <div class="sub">Misyon, Değerler, Projeler, Yazılar, Bize Katıl · sadece bu bilgisayarda</div>
     </div>
     <span class="spacer"></span>
-    <a href="/purpose/" target="_blank">Misyon sayfası ↗</a>
-    <a href="/values/" target="_blank">Değerler sayfası ↗</a>
+    <a href="/purpose/" target="_blank">Misyon ↗</a>
+    <a href="/values/" target="_blank">Değerler ↗</a>
+    <a href="/projects/" target="_blank">Projeler ↗</a>
+    <a href="/writing/" target="_blank">Yazılar ↗</a>
+    <a href="/join/" target="_blank">Bize Katıl ↗</a>
     <span id="status">Yükleniyor…</span>
     <button id="save" class="primary" type="button" disabled>Kaydet</button>
   </div>
 </header>
 <main>
-  <p class="note">Her maddenin açıklaması, sitede maddeye tıklanınca açılır. Açıklama Türkçede 30–40, İngilizcede 30–45 kelime olsun (sayaç yeşilse aralıkta). Açıklamayı boş bırakırsan madde tıklanamaz olur. Kaydettikten sonra sayfayı yenileyince değişiklik görünür; veroku.net'e gitmesi için Claude'a "yayınla" de.</p>
+  <p class="note">Her maddenin açıklaması, sitede maddeye tıklanınca açılır. Açıklama Türkçede 30–40, İngilizcede 30–45 kelime olsun (sayaç yeşilse aralıkta). Açıklamayı boş bırakırsan madde tıklanamaz, düz paragraf olur. Kaydettikten sonra sayfayı yenileyince değişiklik görünür; veroku.net'e gitmesi için Claude'a "yayınla" de.</p>
   <div id="sections"></div>
 </main>
 <script>
@@ -78,6 +81,9 @@
     ["mission", "Misyonumuz"],
     ["values", "Değerlerimiz"],
     ["principles", "Operasyon Prensiplerimiz"],
+    ["projects", "Projeler"],
+    ["writing", "Yazılar"],
+    ["join", "Bize Katıl"],
   ];
   let data = null;
   let dirty = false;

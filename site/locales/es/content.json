@@ -1,6 +1,9 @@
 {
+  "page.join.title": "Únete",
+  "page.projects.title": "Proyectos",
   "page.purpose.title": "Propósito",
   "page.values.title": "Valores",
+  "page.writing.title": "Escritos",
   "values.heading.main": "Nuestros Valores",
   "values.heading.ops": "Principios operativos"
 }

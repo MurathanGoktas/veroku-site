@@ -1,8 +1,8 @@
 """Local dev server for site/ that tells the browser not to cache anything.
 
-Also serves a text editor for the Mission and Values pages at /_edit/ (this
-computer only): it reads and writes site-text.json and rebuilds the pages
-with sitetext.py. The editor is not part of site/, so it is never published.
+Also serves a text editor for the Mission, Values, Projects, Writing and Join Us
+pages at /_edit/ (this computer only): it reads and writes site-text.json and
+rebuilds the pages with sitetext.py. The editor is not part of site/, so it is never published.
 
 Usage: python3 serve.py [port]   (default port 8000)
 """
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     handler = functools.partial(NoCacheHandler, directory=str(SITE))
     with DualStackServer(("::", PORT), handler) as server:
         print(f"Serving {SITE} at http://localhost:{PORT} (no browser caching)")
-        print(f"Text editor for Mission and Values: http://localhost:{PORT}/_edit/")
+        print(f"Text editor for the Mission, Values, Projects, Writing and Join Us pages: http://localhost:{PORT}/_edit/")
         try:
             server.serve_forever()
         except KeyboardInterrupt:

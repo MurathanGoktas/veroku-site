@@ -1,7 +1,7 @@
-"""Build the Mission and Values pages from site-text.json.
+"""Build the Mission, Values, Projects, Writing and Join Us pages from site-text.json.
 
-site-text.json holds the Mission, Values and Operating Principles text in Turkish and
-English, each item with an optional explanation that opens when the item is clicked.
+site-text.json holds the text of those pages in Turkish and English: a heading and
+items, each item with an optional explanation that opens when the item is clicked.
 This writes it into the English and Turkish locale files and into the pages' HTML
 (English, so the pages read correctly before translations load).
 
@@ -21,13 +21,26 @@ SECTIONS = {
     "mission": ("mission.heading", "mission.", "Mission page paragraph"),
     "values": ("values.heading.main", "values.list.", "Values page list item"),
     "principles": ("values.heading.ops", "values.principles.", "Values page, Operating Principles list item"),
+    "projects": ("projects.heading", "projects.", "Projects page paragraph"),
+    "writing": ("writing.heading", "writing.", "Writing page paragraph"),
+    "join": ("join.heading", "join.", "Join Us page paragraph"),
+}
+# Pages that are a heading followed by paragraphs: section -> page file under site/.
+PARAGRAPH_PAGES = {
+    "mission": "purpose/index.html",
+    "projects": "projects/index.html",
+    "writing": "writing/index.html",
+    "join": "join/index.html",
 }
 HEADING_CONTEXT = {
     "mission": "Heading of the mission page",
     "values": "Values page main heading",
     "principles": "Values page second major heading",
+    "projects": "Heading of the projects page",
+    "writing": "Heading of the writing page",
+    "join": "Heading of the join us page",
 }
-OWNED_PREFIXES = ("mission.", "values.list.", "values.principles.")
+OWNED_PREFIXES = tuple(prefix for _, prefix, _ in SECTIONS.values())
 ID_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]{0,39}$")
 
 
@@ -43,7 +56,7 @@ def validate(data):
         ids = set()
         for n, item in enumerate(section.get("items") or [], 1):
             item_id = item.get("id", "")
-            if not ID_PATTERN.match(item_id) or (name == "mission" and item_id == "heading"):
+            if not ID_PATTERN.match(item_id) or SECTIONS[name][1] + item_id == SECTIONS[name][0]:
                 raise ValueError(f"{name} item {n}: bad id {item_id!r}")
             if item_id in ids:
                 raise ValueError(f"{name}: id {item_id!r} is used twice")
@@ -123,10 +136,12 @@ def build(data=None):
     tr_path.write_text(json.dumps(dict(sorted(tr.items())), indent=2, ensure_ascii=False) + "\n")
 
     # Pages.
-    mission = data["mission"]
-    body = heading_html(SECTIONS["mission"][0], mission["heading"]["en"])
-    body += "".join("\n" + item_html("mission." + i["id"], i, block=True) + "\n" for i in mission["items"])
-    replace_letter_body(SITE / "purpose/index.html", body)
+    for name, page in PARAGRAPH_PAGES.items():
+        heading_key, prefix, _ = SECTIONS[name]
+        section = data[name]
+        body = heading_html(heading_key, section["heading"]["en"])
+        body += "".join("\n" + item_html(prefix + i["id"], i, block=True) + "\n" for i in section["items"])
+        replace_letter_body(SITE / page, body)
 
     body = heading_html(SECTIONS["values"][0], data["values"]["heading"]["en"]) + "\n"
     body += section_list(data, "values") + "\n"
@@ -137,4 +152,4 @@ def build(data=None):
 
 if __name__ == "__main__":
     build()
-    print("Built Mission and Values from site-text.json")
+    print("Built Mission, Values, Projects, Writing and Join Us from site-text.json")

@@ -1,6 +1,9 @@
 {
+  "page.join.title": "함께하기",
+  "page.projects.title": "프로젝트",
   "page.purpose.title": "목적",
   "page.values.title": "가치관",
+  "page.writing.title": "글",
   "values.heading.main": "우리의 가치",
   "values.heading.ops": "작동 원리"
 }

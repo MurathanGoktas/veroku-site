@@ -127,5 +127,50 @@
         "desc_en": "However advanced automation becomes, people always set the direction and judge the results. Machines suggest and speed up the work; people make the final call and own it. Every system we build keeps people in control and stays transparent."
       }
     ]
+  },
+  "projects": {
+    "heading": {
+      "tr": "Projelerimiz",
+      "en": "Our Projects"
+    },
+    "items": [
+      {
+        "id": "soon",
+        "tr": "Üzerinde çalıştığımız projeleri yakında burada paylaşacağız.",
+        "en": "We'll share the projects we're working on here soon.",
+        "desc_tr": "",
+        "desc_en": ""
+      }
+    ]
+  },
+  "writing": {
+    "heading": {
+      "tr": "Yazılarımız",
+      "en": "Our Writing"
+    },
+    "items": [
+      {
+        "id": "soon",
+        "tr": "İlk yazılarımızı yakında burada paylaşacağız.",
+        "en": "We'll share our first pieces here soon.",
+        "desc_tr": "",
+        "desc_en": ""
+      }
+    ]
+  },
+  "join": {
+    "heading": {
+      "tr": "Bize Katıl",
+      "en": "Join Us"
+    },
+    "items": [
+      {
+        "id": "intro",
+        "tr": "Değerlerimizi paylaşan insanlarla tanışmak isteriz. Açık pozisyonlarımızı ve bize nasıl ulaşabileceğini yakında burada paylaşacağız.",
+        "en": "We'd love to meet people who share our values. We'll share our open roles and how to reach us here soon.",
+        "desc_tr": "",
+        "desc_en": ""
+      }
+    ]
   }
 }

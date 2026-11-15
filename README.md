@@ -32,6 +32,9 @@ site/
   index.html                 home (slogan)
   purpose/                   Mission page (nav label "Mission" / "Misyon")
   values/                    Values and Operating Principles
+  projects/                  Projects (placeholder text for now)
+  writing/                   Writing (placeholder text for now)
+  join/                      Join Us (placeholder text for now)
   404.html                   not-found page
   CNAME                      GitHub Pages domain (veroku.net)
   locales/<lang>/*.json      i18n strings (27 languages x common, errors, content), loaded by static/i18n.js
@@ -49,15 +52,15 @@ brand/                       logo files: veroku-logo.svg/.png (wordmark), veroku
 earendil-arsiv/              everything removed before publishing (not part of the site, gitignored)
 ```
 
-## Editing Mission and Values
+## Editing the page text
 
-The Mission, Values and Operating Principles text lives in `site-text.json` (Turkish and English, each item with a short explanation that opens when the item is clicked on the site). Edit it in the browser at http://localhost:8000/_edit/ while `serve.py` runs: saving writes `site-text.json` and rebuilds the two pages and the `content.*` keys in `locales/en` and `locales/tr` (`sitetext.py`). The editor only answers on this computer and is not part of `site/`, so it is never published. Running `python3 sitetext.py` does the same rebuild from the file.
+The text of the Mission, Values (with Operating Principles), Projects, Writing and Join Us pages lives in `site-text.json` (Turkish and English, each item with a short explanation that opens when the item is clicked on the site). Edit it in the browser at http://localhost:8000/_edit/ while `serve.py` runs: saving writes `site-text.json` and rebuilds those pages and the `content.*` keys in `locales/en` and `locales/tr` (`sitetext.py`). The editor only answers on this computer and is not part of `site/`, so it is never published. Running `python3 sitetext.py` does the same rebuild from the file.
 
 ## Text
 
 Our own text is English in the HTML and in `locales/en/`, Turkish in `locales/tr/`; other languages fall back to English for it:
 - Home slogan: `home.tagline` in `common.json`
-- Mission, Values, Operating Principles: generated from `site-text.json` (see above) into `mission.*`, `values.list.*`, `values.principles.*` and the headings in `content.json`; explanations use the item key plus `.desc`
+- Mission, Values, Operating Principles, Projects, Writing, Join Us: generated from `site-text.json` (see above) into `mission.*`, `values.list.*`, `values.principles.*`, `projects.*`, `writing.*`, `join.*` and the headings in `content.json`; explanations use the item key plus `.desc`
 
 The page `<meta>` descriptions are the Turkish slogan for every language.
 
