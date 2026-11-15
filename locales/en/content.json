@@ -7,22 +7,6 @@
     "message": "Values",
     "context": "Page title for the values page shown in the browser tab and as the visually-hidden heading"
   },
-  "mission.heading": {
-    "message": "Our Mission",
-    "context": "Heading of the mission page"
-  },
-  "mission.statement": {
-    "message": "To keep people in harmony, in balance and in agency.",
-    "context": "The mission statement, first line under the heading"
-  },
-  "mission.agency": {
-    "message": "We discover and nurture human agency.",
-    "context": "Mission paragraph about human agency"
-  },
-  "mission.support": {
-    "message": "We help people and organizations go through their cognitive automation transformation in a healthy way.",
-    "context": "Mission paragraph about supporting the cognitive automation transformation"
-  },
   "values.heading.main": {
     "message": "Our Values",
     "context": "Values page main heading"
@@ -31,52 +15,128 @@
     "message": "Our Operating Principles",
     "context": "Values page second major heading"
   },
+  "mission.heading": {
+    "message": "Our Mission",
+    "context": "Heading of the mission page"
+  },
+  "mission.statement": {
+    "message": "To keep people in harmony, in balance and in agency.",
+    "context": "Mission page paragraph"
+  },
+  "mission.statement.desc": {
+    "message": "As technology changes fast, we want people to stay at the center. Harmony concerns people and their surroundings, balance their work and other relationships, and agency their power to make their own decisions.",
+    "context": "Mission page paragraph: explanation shown when the item is clicked"
+  },
+  "mission.agency": {
+    "message": "We discover and nurture human agency.",
+    "context": "Mission page paragraph"
+  },
+  "mission.agency.desc": {
+    "message": "We shape the new ways of working that innovation brings so that the power to steer stays with people. First we discover this space, then we make room for it to grow with the right tools and habits.",
+    "context": "Mission page paragraph: explanation shown when the item is clicked"
+  },
+  "mission.support": {
+    "message": "We help people and organizations go through their cognitive automation transformation in a healthy way.",
+    "context": "Mission page paragraph"
+  },
+  "mission.support.desc": {
+    "message": "Cognitive automation is reshaping how work gets done. We treat this shift not as a technology project but as a process people and teams go through together, and we stay beside them with steps that ease worry and speed up learning.",
+    "context": "Mission page paragraph: explanation shown when the item is clicked"
+  },
   "values.list.connected": {
     "message": "Everything is connected to everything.",
     "context": "Values page list item"
   },
-  "values.list.people": {
-    "message": "We pull people away from drudgery and bring them closer to one another.",
-    "context": "Values page list item"
-  },
-  "values.list.tool": {
-    "message": "Technology is a tool, and a tool is technology.",
-    "context": "Values page list item"
-  },
-  "values.list.abundance": {
-    "message": "Cognitive automation creates abundance.",
-    "context": "Values page list item"
-  },
-  "values.list.change": {
-    "message": "Change is inevitable, and it is not new.",
-    "context": "Values page list item"
-  },
-  "values.principles.beauty": {
-    "message": "We create beauty.",
-    "context": "Values page, Operating Principles list item"
-  },
-  "values.principles.ease": {
-    "message": "We create ease.",
-    "context": "Values page, Operating Principles list item"
-  },
-  "values.principles.playful": {
-    "message": "Execution is done playfully.",
-    "context": "Values page, Operating Principles list item"
-  },
-  "values.principles.people": {
-    "message": "It is people who direct and evaluate.",
-    "context": "Values page, Operating Principles list item"
-  },
-  "values.principles.mistakes": {
-    "message": "We are not afraid of mistakes; we fix them quickly.",
-    "context": "Values page, Operating Principles list item"
+  "values.list.connected.desc": {
+    "message": "Whether obvious or hidden, strong or faint, everything is related to everything else. We approach our work, our decisions and our lives with the responsibility this brings.",
+    "context": "Values page list item: explanation shown when the item is clicked"
   },
   "values.list.smallMoves": {
     "message": "Small moves lead to big results.",
     "context": "Values page list item"
   },
+  "values.list.smallMoves.desc": {
+    "message": "We work knowing that even small steps in the right direction can pay off enormously. Big or small, we feel responsible for taking the steps we believe are right, and we feel the excitement of waiting to see what they bring.",
+    "context": "Values page list item: explanation shown when the item is clicked"
+  },
   "values.list.worth": {
     "message": "We separate a person's worth from their economic value.",
     "context": "Values page list item"
+  },
+  "values.list.worth.desc": {
+    "message": "As cognitive automation takes over the work people do, their value inside a company may seem to shrink. While discovering the new way of working, we respect and trust people, and we care deeply about finding their renewed, valuable place in it.",
+    "context": "Values page list item: explanation shown when the item is clicked"
+  },
+  "values.list.tool": {
+    "message": "Technology is a tool, and a tool is technology.",
+    "context": "Values page list item"
+  },
+  "values.list.tool.desc": {
+    "message": "We don't see technology as a goal in itself; it is worth as much as the need it serves. At the same time, a pen, a spreadsheet or a habit is technology too: it doesn't have to be electronic or smart.",
+    "context": "Values page list item: explanation shown when the item is clicked"
+  },
+  "values.list.abundance": {
+    "message": "Cognitive automation creates abundance.",
+    "context": "Values page list item"
+  },
+  "values.list.abundance.desc": {
+    "message": "When routine thinking work is handed over to machines, time, attention and creativity are freed up, and people can focus on what really matters.",
+    "context": "Values page list item: explanation shown when the item is clicked"
+  },
+  "values.list.change": {
+    "message": "Change is inevitable, and it is not new.",
+    "context": "Values page list item"
+  },
+  "values.list.change.desc": {
+    "message": "From the printing press to electricity, humanity has lived through many great transformations, and cognitive automation is one more. Rather than resisting change, we learn from the past, meet it calm, curious and prepared, and make the most of what it brings.",
+    "context": "Values page list item: explanation shown when the item is clicked"
+  },
+  "values.principles.mistakes": {
+    "message": "We are not afraid of mistakes; we fix them quickly.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.mistakes.desc": {
+    "message": "Making mistakes is a natural part of trying new things and learning. Instead of hiding them, we talk about them openly, understand why they happened and fix them fast. This builds trust and keeps the same mistake from happening again.",
+    "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
+  },
+  "values.principles.design": {
+    "message": "We design with care.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.design.desc": {
+    "message": "We create aesthetic, harmonious and inspiring designs in which every part is carefully chosen and carefully connected to every other.",
+    "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
+  },
+  "values.principles.beauty": {
+    "message": "We create beauty.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.beauty.desc": {
+    "message": "We care not only that our work works, but that it is beautiful. Careful design, clear writing and a tidy process are a form of respect for the people who use them, and they naturally raise the quality of the work.",
+    "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
+  },
+  "values.principles.ease": {
+    "message": "We create ease.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.ease.desc": {
+    "message": "Making the complex simple is at the heart of what we do. We measure a solution by how much easier it makes people's lives, and we remove needless steps so that energy goes to work that truly adds value.",
+    "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
+  },
+  "values.principles.playful": {
+    "message": "Execution is done playfully.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.playful.desc": {
+    "message": "We choose to approach even serious work with curiosity and a sense of play. Playfulness makes it easier to experiment, explore and stay open to new ideas; it keeps teams energized and makes room for the most creative solutions.",
+    "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
+  },
+  "values.principles.people": {
+    "message": "It is people who direct and evaluate.",
+    "context": "Values page, Operating Principles list item"
+  },
+  "values.principles.people.desc": {
+    "message": "However advanced automation becomes, people always set the direction and judge the results. Machines suggest and speed up the work; people make the final call and own it. Every system we build keeps people in control and stays transparent.",
+    "context": "Values page, Operating Principles list item: explanation shown when the item is clicked"
   }
 }
