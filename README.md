@@ -39,10 +39,12 @@ site/
     i18n.js                  translation loader
     htmx-bundle.min.js       page transitions (hx-boost swaps div.page)
     purify.min.js            DOMPurify, sanitizes translated HTML
-    veroku-mark.svg          placeholder logo (a tall V); also drawn by the canvas
-    favicon/                 placeholder favicons drawn from the same V
+    veroku-mark.svg          site logo: the eye-shaped "o" symbol in white (CSS tints it); also drawn by the canvas
+    favicon/                 favicons and app icons drawn from the same symbol
     fonts/                   Departure Mono and Commit Mono (both free, OFL)
-earendil-arsiv/              everything removed before publishing (not part of the site)
+brand/                       logo files: veroku-logo.svg/.png (wordmark), veroku-symbol.svg/.png (the "o"),
+                             verioku-logo-original.png (the old name's logo they were traced from)
+earendil-arsiv/              everything removed before publishing (not part of the site, gitignored)
 ```
 
 ## Text
@@ -61,5 +63,4 @@ Moved to `earendil-arsiv/` with their original paths: Earendil's posts and feeds
 ## Still to do
 
 - The theme (styles, scripts, ocean canvas) is Earendil's; their site repo has no license, so ask them for permission or replace it over time.
-- Replace the placeholder V logo and favicons with the real logo.
 - The 404 message ("It was lost, and has not been seen again.") is still Earendil's wording.

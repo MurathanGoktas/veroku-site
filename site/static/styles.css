@@ -246,14 +246,14 @@ body:has(.page[data-page-type="corner-logo"]) .center-logo {
   position: static;
   transform: none;
   flex: 0 0 auto;
-  /* Optical exception: center the tall emblem on the first navigation row. */
-  margin-block-start: -35px;
+  /* Center the round symbol on the first navigation row (the MENU label). */
+  margin-block-start: -8px;
 }
 
 body:has(.page[data-page-type="home"]) .main-logo,
 body:has(.page[data-page-type="corner-logo"]) .main-logo {
-  /* The emblem SVG has a tight viewBox, so its visible edge is the frame edge. */
-  width: 32px;
+  /* The symbol SVG has a tight viewBox, so its visible edge is the frame edge. */
+  width: 34px;
   max-width: none;
 }
 
@@ -2022,12 +2022,12 @@ body:not(.theme-night) .page--values .disclosure-summary::after {
 
   body:has(.page[data-page-type="home"]) .center-logo,
   body:has(.page[data-page-type="corner-logo"]) .center-logo {
-    margin-block-start: -10px;
+    margin-block-start: -4px;
   }
 
   body:has(.page[data-page-type="home"]) .main-logo,
   body:has(.page[data-page-type="corner-logo"]) .main-logo {
-    width: 22px;
+    width: 26px;
     max-width: none;
   }
 
