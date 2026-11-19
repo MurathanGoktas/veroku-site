@@ -19,6 +19,7 @@ import re
 ROOT = pathlib.Path(__file__).resolve().parent
 SITE = ROOT / "site"
 TEXT = ROOT / "site-text.json"
+POSTS = ROOT / "posts.json"  # the posts listed on the Writing page, newest first
 DEFAULT_LANG = "tr"  # language of the pages' HTML; must match DEFAULT_LANG in static/i18n.js
 
 # section -> (heading key, item key prefix, English context for items)
@@ -45,7 +46,7 @@ HEADING_CONTEXT = {
     "writing": "Heading of the writing page",
     "join": "Heading of the join us page",
 }
-OWNED_PREFIXES = tuple(prefix for _, prefix, _ in SECTIONS.values())
+OWNED_PREFIXES = tuple(prefix for _, prefix, _ in SECTIONS.values()) + ("posts.",)
 ID_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]{0,39}$")
 
 
@@ -106,6 +107,24 @@ def section_list(data, name):
     return '<ul class="icon-list icon-list--star">\n' + items + ("\n" if items else "") + "</ul>\n"
 
 
+def post_list_html(posts, drafts=False):
+    """The Writing page's list of posts (the theme's posts-list): date line, title, one-line summary.
+
+    Drafts ("draft": true in posts.json) go into a second list that ships hidden; script.js shows it
+    only in a browser that has opened /writing/?taslak once (/writing/?taslak=0 forgets it)."""
+    rows = []
+    for post in posts:
+        key = "content.posts." + post["slug"]
+        span = lambda cls, field: (f'<span class="{cls}" data-i18n="{key}.{field}">'
+                                   f'{esc(post[field][DEFAULT_LANG])}</span>')
+        rows.append(f'  <li><a href="/writing/{post["slug"]}/">{span("post-date", "meta")}'
+                    f'{span("post-name", "title")}{span("post-dek", "dek")}</a></li>')
+    if drafts:
+        return ('<ul class="posts-list posts-list--writing posts-list--drafts" data-drafts hidden>\n'
+                + "\n".join(rows) + "\n</ul>\n")
+    return '<ul class="posts-list posts-list--writing">\n' + "\n".join(rows) + "\n</ul>\n"
+
+
 def replace_letter_body(path, body):
     page = path.read_text()
     page, n = re.subn(r'(<div class="letter-body">\n).*?(      </div>\n    </article>)',
@@ -139,6 +158,12 @@ def build(data=None):
                 en[key + ".desc"] = {"message": desc_en or desc_tr,
                                      "context": context + ": explanation shown when the item is clicked"}
                 tr[key + ".desc"] = desc_tr or desc_en
+    posts = json.loads(POSTS.read_text()) if POSTS.exists() else []
+    for post in posts:
+        for field in ("title", "dek", "meta"):
+            key = f"posts.{post['slug']}.{field}"
+            en[key] = {"message": clean(post[field]["en"]), "context": f"Writing page, post list: {field}"}
+            tr[key] = clean(post[field]["tr"])
     en_path.write_text(json.dumps(en, indent=2, ensure_ascii=False) + "\n")
     tr_path.write_text(json.dumps(dict(sorted(tr.items())), indent=2, ensure_ascii=False) + "\n")
 
@@ -148,6 +173,13 @@ def build(data=None):
         section = data[name]
         body = heading_html(heading_key, section["heading"][DEFAULT_LANG])
         body += "".join("\n" + item_html(prefix + i["id"], i, block=True) + "\n" for i in section["items"])
+        if name == "writing":
+            public = [p for p in posts if not p.get("draft")]
+            drafts = [p for p in posts if p.get("draft")]
+            if public:
+                body += "\n" + post_list_html(public) + "\n"
+            if drafts:
+                body += "\n" + post_list_html(drafts, drafts=True) + "\n"
         replace_letter_body(SITE / page, body)
 
     body = heading_html(SECTIONS["values"][0], data["values"]["heading"][DEFAULT_LANG]) + "\n"

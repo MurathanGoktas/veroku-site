@@ -163,8 +163,8 @@
     "message": "Our Writing",
     "context": "Heading of the writing page"
   },
-  "writing.soon": {
-    "message": "We'll share our first pieces here soon.",
+  "writing.intro": {
+    "message": "Notes on people, work and organisations in the age of cognitive automation.",
     "context": "Writing page paragraph"
   },
   "join.heading": {
@@ -174,5 +174,17 @@
   "join.intro": {
     "message": "We'd love to meet people who share our values. We'll share our open roles and how to reach us here soon.",
     "context": "Join Us page paragraph"
+  },
+  "posts.geriye-kalan.title": {
+    "message": "What Remains",
+    "context": "Writing page, post list: title"
+  },
+  "posts.geriye-kalan.dek": {
+    "message": "Companies bought AI and are still waiting for the value. The missing piece isn't software. It's people.",
+    "context": "Writing page, post list: dek"
+  },
+  "posts.geriye-kalan.meta": {
+    "message": "Draft · 19 Nov 2026 · 7 min read",
+    "context": "Writing page, post list: meta"
   }
 }
