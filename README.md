@@ -23,6 +23,8 @@ git push --force origin "$(git subtree split --prefix site)":gh-pages
 
 `gh-pages` is generated from `site/`, so it is force-pushed: when the domain is changed in the GitHub Pages settings, GitHub commits its own `CNAME` edits to that branch, and the next push replaces them.
 
+The site can now also be changed from a chat in the Veroku panel. The bot prepares the change as a pull request, and it is merged once the owner approves it in the chat. The publish step then writes the new `site/` to the `gh-pages` branch as a single commit on top of it, without a force push. The manual steps above still work.
+
 Pushes go through the MurathanGoktas GitHub account (`gh auth switch -u MurathanGoktas` if gh is on another account). HTTPS is on (GitHub's certificate, renewed automatically). DNS for veroku.net is at GoDaddy: four A records to GitHub Pages (185.199.108-111.153) and `www` as a CNAME to `murathangoktas.github.io`.
 
 ## Layout
