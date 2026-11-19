@@ -2549,3 +2549,26 @@ requestAnimationFrame(render);
 revealPage();
 
 })();
+
+// Draft posts: listed on the Writing page only in a browser that has opened /writing/?taslak
+// (/writing/?taslak=0 forgets it). Drafts are noindex and not linked anywhere else.
+(function() {
+  var KEY = 'veroku-taslak';
+  try {
+    var q = new URLSearchParams(window.location.search);
+    if (q.has('taslak')) {
+      if (q.get('taslak') === '0') window.localStorage.removeItem(KEY);
+      else window.localStorage.setItem(KEY, '1');
+    }
+    if (window.localStorage.getItem(KEY) !== '1') return;
+  } catch (e) {
+    return;
+  }
+  var show = function() {
+    var lists = document.querySelectorAll('[data-drafts]');
+    for (var i = 0; i < lists.length; i++) lists[i].hidden = false;
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+  else show();
+  document.addEventListener('htmx:afterSettle', show);
+})();

@@ -107,8 +107,11 @@ def section_list(data, name):
     return '<ul class="icon-list icon-list--star">\n' + items + ("\n" if items else "") + "</ul>\n"
 
 
-def post_list_html(posts):
-    """The Writing page's list of posts (the theme's posts-list): date line, title, one-line summary."""
+def post_list_html(posts, drafts=False):
+    """The Writing page's list of posts (the theme's posts-list): date line, title, one-line summary.
+
+    Drafts ("draft": true in posts.json) go into a second list that ships hidden; script.js shows it
+    only in a browser that has opened /writing/?taslak once (/writing/?taslak=0 forgets it)."""
     rows = []
     for post in posts:
         key = "content.posts." + post["slug"]
@@ -116,6 +119,9 @@ def post_list_html(posts):
                                    f'{esc(post[field][DEFAULT_LANG])}</span>')
         rows.append(f'  <li><a href="/writing/{post["slug"]}/">{span("post-date", "meta")}'
                     f'{span("post-name", "title")}{span("post-dek", "dek")}</a></li>')
+    if drafts:
+        return ('<ul class="posts-list posts-list--writing posts-list--drafts" data-drafts hidden>\n'
+                + "\n".join(rows) + "\n</ul>\n")
     return '<ul class="posts-list posts-list--writing">\n' + "\n".join(rows) + "\n</ul>\n"
 
 
@@ -167,8 +173,13 @@ def build(data=None):
         section = data[name]
         body = heading_html(heading_key, section["heading"][DEFAULT_LANG])
         body += "".join("\n" + item_html(prefix + i["id"], i, block=True) + "\n" for i in section["items"])
-        if name == "writing" and posts:
-            body += "\n" + post_list_html(posts) + "\n"
+        if name == "writing":
+            public = [p for p in posts if not p.get("draft")]
+            drafts = [p for p in posts if p.get("draft")]
+            if public:
+                body += "\n" + post_list_html(public) + "\n"
+            if drafts:
+                body += "\n" + post_list_html(drafts, drafts=True) + "\n"
         replace_letter_body(SITE / page, body)
 
     body = heading_html(SECTIONS["values"][0], data["values"]["heading"][DEFAULT_LANG]) + "\n"
