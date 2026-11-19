@@ -2106,6 +2106,435 @@ body:not(.theme-night) .page--values .disclosure-summary::after {
 }
 
 /* ==========================================================================
+   Posts: the Writing page list and a single post (/writing/<slug>/).
+   A post carries both languages; the one that is not the page's <html lang>
+   is hidden. Charts are drawn in currentColor so they follow day and night.
+   ========================================================================== */
+
+.posts-list--writing {
+  margin-top: 36px;
+}
+
+.posts-list--writing li {
+  margin: 0 0 28px;
+}
+
+.posts-list--writing a {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none !important;
+  font-weight: 400 !important;
+}
+
+.posts-list--writing .post-date {
+  font-family: var(--mono-font);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+}
+
+.posts-list--writing .post-name {
+  margin-inline-start: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.posts-list--writing .post-dek {
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  opacity: 0.72;
+}
+
+html[lang="en"] .post-lang[data-lang-block="tr"],
+html:not([lang="en"]) .post-lang[data-lang-block="en"] {
+  display: none;
+}
+
+.page--post .letter-body {
+  --post-faint: 0.6;
+}
+
+.page--post .letter-body a.post-back {
+  display: inline-block;
+  margin-bottom: 40px;
+  font: normal var(--font-size-xs)/var(--leading-ui) var(--mono-font);
+  text-transform: uppercase;
+  text-decoration: none;
+  opacity: var(--post-faint);
+  transition: opacity 0.2s ease;
+}
+
+.page--post .letter-body a.post-back:hover {
+  opacity: 1;
+}
+
+.post-head {
+  margin-bottom: 44px;
+}
+
+.post-kicker {
+  margin: 0 0 18px !important;
+  font: normal var(--font-size-xs)/var(--leading-ui) var(--mono-font);
+  text-transform: uppercase;
+  opacity: var(--post-faint);
+}
+
+.post-title {
+  margin: 0 0 20px;
+  font-family: var(--serif-font);
+  font-size: clamp(2.25rem, 1.5rem + 3vw, 3.75rem);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+}
+
+.post-dek {
+  margin: 0 !important;
+  font-size: 1.2em;
+  font-style: italic;
+  line-height: 1.45;
+  opacity: 0.78;
+  text-wrap: balance;
+}
+
+.post-h {
+  margin: 52px 0 16px;
+  font-family: var(--serif-font);
+  font-size: var(--font-size-xl);
+  font-style: italic;
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+
+.post-pull {
+  margin: 48px 0;
+  padding: 26px 0;
+  border-block: 1px dotted currentColor;
+  text-align: center;
+}
+
+.post-pull p {
+  margin: 0 !important;
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 2rem);
+  font-style: italic;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.post-pull::before {
+  content: "\2726";
+  display: block;
+  margin-bottom: 14px;
+  font: normal var(--font-size-sm)/1 var(--mono-font);
+  opacity: var(--post-faint);
+}
+
+.letter-body ol.post-steps {
+  counter-reset: post-step;
+  margin: 24px 0 28px;
+}
+
+.letter-body ol.post-steps > li {
+  counter-increment: post-step;
+  margin: 0 0 16px;
+  padding-inline-start: 2.6em;
+}
+
+.letter-body ol.post-steps > li::before {
+  content: counter(post-step, decimal-leading-zero);
+  top: 0.32em;
+  font: normal var(--font-size-xs)/1 var(--mono-font);
+  opacity: var(--post-faint);
+}
+
+.post-close {
+  margin: 40px 0 12px !important;
+  font-size: 1.25em;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.post-sign {
+  font: normal var(--font-size-xs)/var(--leading-ui) var(--mono-font);
+  text-transform: uppercase;
+  opacity: var(--post-faint);
+}
+
+.post-sign::before {
+  content: "\2014\00a0";
+}
+
+.post-notes {
+  margin-top: 60px;
+  padding-top: 22px;
+  border-top: 1px dotted currentColor;
+  font: normal var(--font-size-xs)/1.55 var(--mono-font);
+}
+
+.post-notes__head {
+  margin: 0 0 12px !important;
+  text-transform: uppercase;
+  opacity: var(--post-faint);
+}
+
+.post-notes ol {
+  counter-reset: post-note;
+  margin: 0 !important;
+}
+
+.post-notes li {
+  counter-increment: post-note;
+  margin: 0 0 8px;
+  padding-inline-start: 2.2em;
+}
+
+.post-notes li::before {
+  content: counter(post-note) ".";
+  opacity: var(--post-faint);
+}
+
+.page--post .post-notes a {
+  font-weight: 400;
+}
+
+/* Charts */
+
+.chart {
+  margin: 44px 0 48px;
+  font: normal var(--font-size-xs)/var(--leading-ui) var(--mono-font);
+}
+
+.chart-head {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.chart-no {
+  text-transform: uppercase;
+  opacity: var(--post-faint);
+}
+
+.chart-title {
+  font-family: var(--serif-font);
+  font-size: var(--font-size-lg);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.letter-body .chart ul,
+.letter-body .chart ol {
+  margin: 0;
+}
+
+.letter-body .chart li {
+  padding-inline-start: 0;
+}
+
+.letter-body .chart li::before {
+  content: none;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  margin-bottom: 14px !important;
+}
+
+.chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.chart-key {
+  width: 24px;
+  border-top: 2px solid currentColor;
+}
+
+.chart-key--dot {
+  border-top-style: dotted;
+  border-top-width: 3px;
+}
+
+.chart-plot {
+  position: relative;
+  aspect-ratio: 16 / 8;
+}
+
+.chart-plot svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.chart-grid {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 1 4;
+  opacity: 0.35;
+}
+
+.chart-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart-line--dot {
+  stroke-width: 2.6;
+  stroke-dasharray: 0.5 6;
+}
+
+.chart-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+}
+
+.chart-dot--dot {
+  box-sizing: border-box;
+  border: 2px solid currentColor;
+  background: rgb(var(--page-veil));
+}
+
+.chart-val {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 9px));
+  white-space: nowrap;
+}
+
+.chart-val--down {
+  transform: translate(-50%, 9px);
+}
+
+.chart-plot .chart-val:nth-last-child(1),
+.chart-plot .chart-val:nth-last-child(9) {
+  font-weight: 700;
+}
+
+.chart-y {
+  position: absolute;
+  left: 0;
+  transform: translateY(calc(-100% - 3px));
+  opacity: 0.5;
+}
+
+.chart-x {
+  position: relative;
+  height: 1.6em;
+  margin-top: 8px;
+  opacity: var(--post-faint);
+}
+
+.chart-x span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.chart-source {
+  margin: 14px 0 0 !important;
+  line-height: 1.55;
+  opacity: var(--post-faint);
+}
+
+.chart-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.letter-body .chart-row {
+  display: grid;
+  grid-template-columns: 1fr 3.5em;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 0;
+}
+
+.chart-row__label {
+  grid-column: 1 / -1;
+  font-family: var(--serif-font);
+  font-size: var(--font-size-md);
+  line-height: 1.3;
+}
+
+.chart-row__track {
+  position: relative;
+  height: 10px;
+  background-image: radial-gradient(circle, currentColor 0.7px, transparent 1px);
+  background-size: 5px 5px;
+  background-position: 0 center;
+  background-repeat: repeat-x;
+  opacity: 1;
+}
+
+.chart-row__track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--page-veil), 0.6);
+}
+
+.chart-row__bar {
+  position: absolute;
+  z-index: 1;
+  inset: 0 auto 0 0;
+  width: calc(var(--v) * 1%);
+  background: currentColor;
+  opacity: 0.38;
+  transform-origin: left center;
+  animation: chartGrow 900ms var(--theme-transition-easing) both;
+  animation-delay: calc(var(--i) * 90ms + 150ms);
+}
+
+.chart-row--strong .chart-row__bar {
+  opacity: 1;
+}
+
+.chart-row__val {
+  text-align: right;
+}
+
+.chart-row--strong .chart-row__val {
+  font-weight: 700;
+}
+
+@keyframes chartGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-row__bar {
+    animation: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .chart-plot {
+    aspect-ratio: 4 / 3;
+  }
+
+  .post-h {
+    margin-top: 44px;
+  }
+}
+
+/* ==========================================================================
    Credit banner: an always-black strip on the bottom edge of the window.
    The footer row sits just above it.
    ========================================================================== */

@@ -13,6 +13,9 @@
   "page.purpose.title": "Misyon",
   "page.values.title": "Değerler",
   "page.writing.title": "Yazılar",
+  "posts.geriye-kalan.dek": "Şirketler yapay zekâyı satın aldı, değeri hâlâ bekliyor. Eksik parça yazılım değil; insan.",
+  "posts.geriye-kalan.meta": "19.11.2026 · 6 dk okuma",
+  "posts.geriye-kalan.title": "Geriye Kalan",
   "projects.heading": "Projelerimiz",
   "projects.soon": "Üzerinde çalıştığımız projeleri yakında burada paylaşacağız.",
   "values.heading.main": "Değerlerimiz",
@@ -42,5 +45,5 @@
   "values.principles.playful": "Hayata geçirmeyi oyunbazca yaparız.",
   "values.principles.playful.desc": "Ciddi işleri bile merakla, keyifle ve oyun tadında yapmayı seçeriz. Oyunbazlık denemeyi, keşfetmeyi ve yeni fikirlere açık olmayı kolaylaştırır; ekiplerin enerjisini ve motivasyonunu korur, en yaratıcı çözümlerin ortaya çıkmasına alan açar.",
   "writing.heading": "Yazılarımız",
-  "writing.soon": "İlk yazılarımızı yakında burada paylaşacağız."
+  "writing.intro": "Bilişsel otomasyon çağında insan, iş ve kurumlar üzerine notlar."
 }

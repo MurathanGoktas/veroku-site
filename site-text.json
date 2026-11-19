@@ -150,9 +150,9 @@
     },
     "items": [
       {
-        "id": "soon",
-        "tr": "İlk yazılarımızı yakında burada paylaşacağız.",
-        "en": "We'll share our first pieces here soon.",
+        "id": "intro",
+        "tr": "Bilişsel otomasyon çağında insan, iş ve kurumlar üzerine notlar.",
+        "en": "Notes on people, work and organisations in the age of cognitive automation.",
         "desc_tr": "",
         "desc_en": ""
       }
